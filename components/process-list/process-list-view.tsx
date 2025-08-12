@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pause, Play, Plus, Trash2 } from "lucide-react"
 import type { ProcessItem, ProcessStatus } from "./types"
-import { CONNECTOR_OPTIONS, SPINE_OPTIONS, getObjectsForSpine, getSpineName } from "./spine-registry"
+import { SPINE_OPTIONS, getObjectsForSpine, getSpineName } from "./spine-registry"
 
 function formatDateYYYYMMDD(d: Date) {
   const y = d.getFullYear()
@@ -185,47 +185,13 @@ function CreateProcessModal({
         return "PO"
       case "goods_receipt":
         return "GRN"
-      // Keep review_response lowercase per example, invoice lowercase, others default to their raw name
       case "review_response":
         return "review_response"
       case "invoice":
         return "invoice"
       default:
-        return obj // fallback: use provided name
+        return obj
     }
-  }
-
-  function displayForConnector(connector: string, objAlias: string) {
-    if (connector === "S3") return "s3"
-    if (connector === "Slack") return "slack"
-    if (connector === "Email") return "email"
-    if (connector === "API") return "api"
-    if (connector === "Database") return "database"
-    if (connector === "Webhook") return "webhook"
-    if (connector === "ERP") {
-      return " ERP"
-    }
-    if (connector === "MS-365") {
-      return "MS 365"
-    }
-    return connector
-  }
-
-  function combinedOptionLabel(obj: string, connector: string) {
-    const alias = aliasForObjectName(obj)
-    const connectorDisplay = displayForConnector(connector, alias)
-    return `${alias}-${connectorDisplay}`
-  }
-
-  // New: derive slot options per object using its alias
-  function objectSlotOptions(obj: string) {
-    const alias = aliasForObjectName(obj)
-    return [`current_${alias}_obj`, `reference_${alias}_obj`]
-  }
-
-  function connectionSlotOptions(obj: string) {
-    const alias = aliasForObjectName(obj)
-    return [`incoming_${alias}_con`, `outgoing_${alias}_con`]
   }
 
   const [name, setName] = useState("")
@@ -236,28 +202,6 @@ function CreateProcessModal({
   >({})
 
   const spineObjects = useMemo(() => getObjectsForSpine(spineId), [spineId])
-
-  const handleConnectorChange = (obj: string, connector: string) => {
-    setMappings((prev) => ({
-      ...prev,
-      [obj]: {
-        connector,
-        // Reset slots when connector changes
-        objectSlot: undefined,
-        connectionSlot: undefined,
-      },
-    }))
-  }
-
-  const handleObjectSlotChange = (obj: string, slot: string) => {
-    setMappings((prev) => ({
-      ...prev,
-      [obj]: {
-        ...prev[obj],
-        objectSlot: slot,
-      },
-    }))
-  }
 
   const handleConnectionSlotChange = (obj: string, slot: string) => {
     setMappings((prev) => ({
@@ -273,7 +217,6 @@ function CreateProcessModal({
 
   const handleSave = () => {
     if (!canSave) return
-    // Per instructions, do not modify payload shape; slots are UI-only here
     const result = spineObjects.map((obj) => ({
       objectName: obj,
       connector: mappings[obj]?.connector || "",
@@ -285,7 +228,7 @@ function CreateProcessModal({
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
-        className="absolute inset-x-0 top-[8%] mx-auto w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden"
+        className="absolute inset-x-0 top-[8%] mx-auto w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden max-h-[80vh] flex flex-col"
         role="dialog"
         aria-modal="true"
       >
@@ -296,7 +239,7 @@ function CreateProcessModal({
           </Button>
         </div>
 
-        <div className="p-5 space-y-6">
+        <div className="p-5 space-y-6 overflow-y-auto flex-1">
           {/* Process Name */}
           <section>
             <label className="block text-sm text-gray-700 mb-1">Process name</label>
@@ -315,7 +258,6 @@ function CreateProcessModal({
                 <SelectItem value="Outgoing_invoice-S3-trig">Outgoing_invoice-S3-trig</SelectItem>
               </SelectContent>
             </Select>
-            <p className="mt-2 text-xs text-gray-500">Example triggers shown for convenience.</p>
           </section>
 
           {/* Spine Selection */}
@@ -333,93 +275,56 @@ function CreateProcessModal({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-2 text-xs text-gray-500">Example: "Invoice processing 2-way spine"</p>
           </section>
 
-          {/* Object Mappings */}
+          {/* Object Slot to Connection Slot Mapping */}
           {spineObjects.length > 0 && (
             <section>
-              <div className="font-medium text-gray-800 mb-2">Map objects to connectors</div>
+              <div className="font-medium text-gray-800 mb-3">Map object slots to connection slots</div>
+
+              {/* Column Headers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                <div className="text-sm font-medium text-gray-600">Object Slots</div>
+                <div className="text-sm font-medium text-gray-600">Connection Slots</div>
+              </div>
+
               <div className="space-y-4">
                 {spineObjects.map((obj) => {
-                  const selectedConnector = mappings[obj]?.connector || ""
-                  const selectedObjectSlot = mappings[obj]?.objectSlot || ""
                   const selectedConnectionSlot = mappings[obj]?.connectionSlot || ""
-                  const objLabel =
-                    obj === "purchase_order" ? "Purchase order" : obj === "goods_receipt" ? "Goods receipt" : obj
+
+                  // Generate object slot name
+                  const objectSlotName =
+                    obj === "invoice"
+                      ? "invoice_new"
+                      : obj === "purchase_order"
+                        ? "PO_new"
+                        : obj === "goods_receipt"
+                          ? "GRN_new"
+                          : obj === "review_response"
+                            ? "review_response_new"
+                            : `${obj}_new`
 
                   return (
-                    <div key={obj} className="space-y-2">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                        <div className="text-sm text-gray-800">{objLabel}</div>
-                        <Select value={selectedConnector} onValueChange={(val) => handleConnectorChange(obj, val)}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select connector (e.g., invoice-s3, PO- ERP, GRN-MS 365)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CONNECTOR_OPTIONS.map((c) => {
-                              const label = combinedOptionLabel(obj, c)
-                              return (
-                                <SelectItem key={`${obj}-${c}`} value={label}>
-                                  {label}
-                                </SelectItem>
-                              )
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Slot Selectors: appear after connector chosen */}
-                      {selectedConnector && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {/* Object Slot */}
-                          <div className="flex flex-col">
-                            <label className="text-xs text-gray-600 mb-1">Object slot</label>
-                            <Select
-                              value={selectedObjectSlot}
-                              onValueChange={(val) => handleObjectSlotChange(obj, val)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select object slot (e.g., current_invoice_obj)" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {objectSlotOptions(obj).map((opt) => (
-                                  <SelectItem key={`${obj}-obj-slot-${opt}`} value={opt}>
-                                    {opt}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Connection Slot */}
-                          <div className="flex flex-col">
-                            <label className="text-xs text-gray-600 mb-1">Connection slot</label>
-                            <Select
-                              value={selectedConnectionSlot}
-                              onValueChange={(val) => handleConnectionSlotChange(obj, val)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select connection slot (e.g., incoming_invoice_con)" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {connectionSlotOptions(obj).map((opt) => (
-                                  <SelectItem key={`${obj}-con-slot-${opt}`} value={opt}>
-                                    {opt}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      )}
+                    <div key={obj} className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                      <div className="text-sm text-gray-800">{objectSlotName}</div>
+                      <Select
+                        value={selectedConnectionSlot}
+                        onValueChange={(val) => handleConnectionSlotChange(obj, val)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select connection slot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Invoice_s3_con">Invoice_s3_con</SelectItem>
+                          <SelectItem value="PO_MS365_con">PO_MS365_con</SelectItem>
+                          <SelectItem value="GRN_ERP_con">GRN_ERP_con</SelectItem>
+                          <SelectItem value="Review_slack_con">Review_slack_con</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   )
                 })}
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Example mappings: invoice-s3, PO- ERP, GRN-MS 365, review_response-slack
-              </p>
             </section>
           )}
         </div>

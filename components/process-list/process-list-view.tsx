@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pause, Play, Plus, Trash2 } from "lucide-react"
-import type { ProcessItem, ProcessStatus } from "./types"
+import type { JobItem, JobStatus } from "./types"
 import { SPINE_OPTIONS, getObjectsForSpine, getSpineName } from "./spine-registry"
 
 function formatDateYYYYMMDD(d: Date) {
@@ -19,10 +19,10 @@ function formatDateYYYYMMDD(d: Date) {
 }
 
 export function ProcessListView() {
-  const [processes, setProcesses] = useState<ProcessItem[]>([
+  const [jobs, setJobs] = useState<JobItem[]>([
     {
-      id: "proc-1",
-      name: "AA Invoice Processing",
+      id: "job-1",
+      name: "AA Invoice Processing Job",
       spine: "Invoice Automation",
       status: "Running",
       lastModified: "2024-07-16",
@@ -38,21 +38,21 @@ export function ProcessListView() {
   const [showCreate, setShowCreate] = useState(false)
 
   const toggleStatus = (id: string) => {
-    setProcesses((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          const next: ProcessStatus = p.status === "Running" ? "Paused" : "Running"
-          return { ...p, status: next, lastModified: formatDateYYYYMMDD(new Date()) }
+    setJobs((prev) =>
+      prev.map((j) => {
+        if (j.id === id) {
+          const next: JobStatus = j.status === "Running" ? "Paused" : "Running"
+          return { ...j, status: next, lastModified: formatDateYYYYMMDD(new Date()) }
         }
-        return p
+        return j
       }),
     )
   }
 
   const deleteProcess = (id: string) => {
-    const ok = window.confirm("Are you sure you want to delete this process?")
+    const ok = window.confirm("Are you sure you want to delete this job?")
     if (!ok) return
-    setProcesses((prev) => prev.filter((p) => p.id !== id))
+    setJobs((prev) => prev.filter((j) => j.id !== id))
   }
 
   const handleCreateSubmit = (payload: {
@@ -60,15 +60,15 @@ export function ProcessListView() {
     spineId: string
     mappings: { objectName: string; connector: string }[]
   }) => {
-    const newItem: ProcessItem = {
-      id: `proc-${Date.now()}`,
+    const newItem: JobItem = {
+      id: `job-${Date.now()}`,
       name: payload.name.trim(),
       spine: getSpineName(payload.spineId),
       status: "Running",
       lastModified: formatDateYYYYMMDD(new Date()),
       objectMappings: payload.mappings,
     }
-    setProcesses((prev) => [newItem, ...prev])
+    setJobs((prev) => [newItem, ...prev])
     setShowCreate(false)
   }
 
@@ -77,13 +77,13 @@ export function ProcessListView() {
       {/* Header */}
       <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Processes</h2>
-          <p className="text-gray-600 text-sm">Manage and monitor your processes.</p>
+          <h2 className="text-xl font-semibold text-gray-800">Jobs</h2>
+          <p className="text-gray-600 text-sm">Manage and monitor your jobs.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button className="bg-orange-600 hover:bg-orange-700 text-white" onClick={() => setShowCreate(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Create new process
+            Create new job
           </Button>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function ProcessListView() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[200px]">Process Name</TableHead>
+                    <TableHead className="min-w-[200px]">Job Name</TableHead>
                     <TableHead className="min-w-[200px]">Spine</TableHead>
                     <TableHead className="min-w-[120px]">Status</TableHead>
                     <TableHead className="min-w-[140px]">Last Modified</TableHead>
@@ -104,29 +104,29 @@ export function ProcessListView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {processes.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium text-gray-900">{p.name}</TableCell>
-                      <TableCell className="text-gray-700">{p.spine}</TableCell>
+                  {jobs.map((j) => (
+                    <TableRow key={j.id}>
+                      <TableCell className="font-medium text-gray-900">{j.name}</TableCell>
+                      <TableCell className="text-gray-700">{j.spine}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={p.status === "Running" ? "secondary" : "outline"}
-                          className={p.status === "Running" ? "bg-green-100 text-green-800" : "text-gray-700"}
+                          variant={j.status === "Running" ? "secondary" : "outline"}
+                          className={j.status === "Running" ? "bg-green-100 text-green-800" : "text-gray-700"}
                         >
-                          {p.status}
+                          {j.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-gray-700">{p.lastModified}</TableCell>
+                      <TableCell className="text-gray-700">{j.lastModified}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => toggleStatus(p.id)}
-                            aria-label={p.status === "Running" ? "Pause process" : "Resume process"}
+                            onClick={() => toggleStatus(j.id)}
+                            aria-label={j.status === "Running" ? "Pause job" : "Resume job"}
                             className="hover:bg-gray-50"
                           >
-                            {p.status === "Running" ? (
+                            {j.status === "Running" ? (
                               <>
                                 <Pause className="w-4 h-4 mr-2" />
                                 Pause
@@ -141,8 +141,8 @@ export function ProcessListView() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => deleteProcess(p.id)}
-                            aria-label="Delete process"
+                            onClick={() => deleteProcess(j.id)}
+                            aria-label="Delete job"
                             className="bg-red-600 hover:bg-red-700"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
@@ -152,10 +152,10 @@ export function ProcessListView() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {processes.length === 0 && (
+                  {jobs.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5}>
-                        <div className="py-8 text-center text-sm text-gray-600">No processes yet.</div>
+                        <div className="py-8 text-center text-sm text-gray-600">No jobs yet.</div>
                       </TableCell>
                     </TableRow>
                   )}
@@ -195,7 +195,7 @@ function CreateProcessModal({
   }
 
   const [name, setName] = useState("")
-  const [trigger, setTrigger] = useState("")
+  const [situation, setSituation] = useState("")
   const [spineId, setSpineId] = useState<string>("")
   const [mappings, setMappings] = useState<
     Record<string, { connector?: string; objectSlot?: string; connectionSlot?: string }>
@@ -233,29 +233,33 @@ function CreateProcessModal({
         aria-modal="true"
       >
         <div className="px-5 py-3 border-b bg-gray-50 flex items-center justify-between">
-          <div className="font-semibold text-gray-800">Create new process</div>
+          <div className="font-semibold text-gray-800">Create new job</div>
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
         </div>
 
         <div className="p-5 space-y-6 overflow-y-auto flex-1">
-          {/* Process Name */}
+          {/* Job Name */}
           <section>
-            <label className="block text-sm text-gray-700 mb-1">Process name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., AA Invoice Processing" />
+            <label className="block text-sm text-gray-700 mb-1">Job name</label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., AA Invoice Processing Job"
+            />
           </section>
 
-          {/* Choose Trigger */}
+          {/* Choose Situation */}
           <section>
-            <label className="block text-sm text-gray-700 mb-1">Choose trigger</label>
-            <Select value={trigger} onValueChange={setTrigger}>
+            <label className="block text-sm text-gray-700 mb-1">Choose situation</label>
+            <Select value={situation} onValueChange={setSituation}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a trigger" />
+                <SelectValue placeholder="Select a situation" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Incoming_invoice-S3-trig">Incoming_invoice-S3-trig</SelectItem>
-                <SelectItem value="Outgoing_invoice-S3-trig">Outgoing_invoice-S3-trig</SelectItem>
+                <SelectItem value="Incoming_invoice-S3-situation">Incoming_invoice-S3-situation</SelectItem>
+                <SelectItem value="Outgoing_invoice-S3-situation">Outgoing_invoice-S3-situation</SelectItem>
               </SelectContent>
             </Select>
           </section>
@@ -334,7 +338,7 @@ function CreateProcessModal({
             Cancel
           </Button>
           <Button className="bg-orange-600 hover:bg-orange-700 text-white" onClick={handleSave} disabled={!canSave}>
-            Create process
+            Create job
           </Button>
         </div>
       </div>

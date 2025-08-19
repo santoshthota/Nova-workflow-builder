@@ -1,15 +1,15 @@
-export type ProcessStatus = "Running" | "Paused"
+export type JobStatus = "Running" | "Paused"
 
 export interface ObjectMapping {
   objectName: string
   connector: string
 }
 
-export interface ProcessItem {
+export interface JobItem {
   id: string
   name: string
   spine: string
-  status: ProcessStatus
+  status: JobStatus
   lastModified: string // YYYY-MM-DD
   objectMappings: ObjectMapping[]
 }

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import {
   FileText,
@@ -10,13 +12,15 @@ import {
   Plus,
   Lightbulb,
   Wrench,
-  MessageSquare,
-  Mail,
-  Search,
-  UserCheck,
-  Zap,
-  Archive,
+  ArrowLeft,
+  Play,
+  Save,
+  ChevronDown,
+  ChevronRight,
+  X,
+  Settings,
   Trash2,
+  RotateCcw,
 } from "lucide-react"
 
 // Process configurations
@@ -113,106 +117,6 @@ const PROCESS_CONFIGS = {
     },
     availableStages: ["understand", "prepare", "decide", "review", "create", "do"],
   },
-  "customer-support": {
-    name: "Customer Support",
-    description: "Customer Support Solution",
-    stages: {
-      intake: {
-        id: "intake",
-        name: "Intake",
-        icon: MessageSquare,
-        color: "bg-blue-600",
-        connectionType: "source",
-        abilities: ["Receive Customer Inquiry", "Capture Channel Context", "Extract Attachments"],
-      },
-      understand: {
-        id: "understand",
-        name: "Understand",
-        icon: Search,
-        color: "bg-cyan-600",
-        connectionType: "default",
-        abilities: [
-          "Identify Customer",
-          "Analyze Inquiry Content",
-          "Detect Language & Tone",
-          "Categorize Issue",
-          "Assess Customer History",
-        ],
-      },
-      prepare: {
-        id: "prepare",
-        name: "Prepare",
-        icon: Cog,
-        color: "bg-orange-600",
-        connectionType: "default",
-        abilities: [
-          "Create Support Ticket",
-          "Set Priority & SLA",
-          "Search Knowledge Base",
-          "Check Known Issues",
-          "Prepare Response Templates",
-        ],
-      },
-      decide: {
-        id: "decide",
-        name: "Decide",
-        icon: Brain,
-        color: "bg-purple-600",
-        connectionType: "default",
-        abilities: [
-          "Evaluate Self-Service Options",
-          "Determine Routing",
-          "Check Automation Eligibility",
-          "Assess Escalation Need",
-        ],
-      },
-      review: {
-        id: "review",
-        name: "Review",
-        icon: UserCheck,
-        color: "bg-yellow-600",
-        connectionType: "default",
-        abilities: ["Agent Assignment", "Expert Review", "Quality Check", "Escalation Review"],
-      },
-      create: {
-        id: "create",
-        name: "Create",
-        icon: Mail,
-        color: "bg-indigo-600",
-        connectionType: "default",
-        abilities: [
-          "Compose Response",
-          "Generate Solution Steps",
-          "Create Follow-up Tasks",
-          "Document Resolution",
-          "Prepare Satisfaction Survey",
-        ],
-      },
-      do: {
-        id: "do",
-        name: "Do",
-        icon: Zap,
-        color: "bg-red-600",
-        connectionType: "default",
-        abilities: ["Send Response", "Execute Solution", "Update Customer Systems", "Trigger Workflows", "Send Survey"],
-      },
-      complete: {
-        id: "complete",
-        name: "Complete",
-        icon: Archive,
-        color: "bg-green-600",
-        connectionType: "target",
-        abilities: [
-          "Close Ticket",
-          "Calculate Metrics",
-          "Update Knowledge Base",
-          "Analyze Patterns",
-          "Archive Interaction",
-        ],
-      },
-    },
-    availableStages: ["understand", "prepare", "decide", "review", "create", "do"],
-  },
 }
 
 // Pre-populated spine data
@@ -288,7 +192,7 @@ const PRE_POPULATED_SPINES = {
   "sp-2": {
     id: "sp-2",
     name: "Customer support baseline spine",
-    selectedProcess: "customer-support",
+    selectedProcess: "invoice-processing",
     nodes: [
       {
         id: "intake-1",
@@ -325,205 +229,6 @@ const PRE_POPULATED_SPINES = {
   },
 }
 
-// Add after PRE_POPULATED_SPINES
-const PRE_POPULATED_BLUEPRINTS = {
-  "bp-1": {
-    id: "bp-1",
-    name: "Invoice processing 2-way blueprint",
-    selectedProcess: "invoice-processing",
-    nodes: [
-      {
-        id: "intake-1",
-        type: "intake",
-        position: { x: 100, y: 200 },
-        abilities: ["receive_invoice"],
-        objectInputs: ["invoice_new", "purchase_order"],
-        objectOutputs: [],
-        isDefault: true,
-      },
-      {
-        id: "understand-1",
-        type: "understand",
-        position: { x: 300, y: 200 },
-        abilities: ["Analyze Document Structure", "Extract Key Information"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "prepare-1",
-        type: "prepare",
-        position: { x: 500, y: 200 },
-        abilities: ["find_matching_po", "load_tolerance_rules"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "decide-1",
-        type: "decide",
-        position: { x: 700, y: 200 },
-        abilities: ["match_details", "apply_tolerance"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "review-1",
-        type: "review",
-        position: { x: 500, y: 350 },
-        abilities: ["manual_review"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "complete-1",
-        type: "complete",
-        position: { x: 900, y: 200 },
-        abilities: ["update_invoice_status", "archive_documents"],
-        objectInputs: [],
-        objectOutputs: ["review_response", "approval_status"],
-        isDefault: true,
-      },
-    ],
-    connections: [
-      { id: "intake-1-understand-1", from: "intake-1", to: "understand-1" },
-      { id: "understand-1-prepare-1", from: "understand-1", to: "prepare-1" },
-      { id: "prepare-1-decide-1", from: "prepare-1", to: "decide-1" },
-      { id: "decide-1-review-1", from: "decide-1", to: "review-1" },
-      { id: "review-1-complete-1", from: "review-1", to: "complete-1" },
-    ],
-  },
-  "bp-2": {
-    id: "bp-2",
-    name: "Invoice processing 3-way blueprint",
-    selectedProcess: "invoice-processing",
-    nodes: [
-      {
-        id: "intake-1",
-        type: "intake",
-        position: { x: 100, y: 200 },
-        abilities: ["receive_invoice"],
-        objectInputs: ["invoice_new", "purchase_order", "goods_receipt"],
-        objectOutputs: [],
-        isDefault: true,
-      },
-      {
-        id: "understand-1",
-        type: "understand",
-        position: { x: 280, y: 200 },
-        abilities: ["Analyze Document Structure", "Extract Key Information", "Identify Document Type"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "prepare-1",
-        type: "prepare",
-        position: { x: 460, y: 200 },
-        abilities: ["find_matching_po", "find_matching_grn", "load_tolerance_rules"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "decide-1",
-        type: "decide",
-        position: { x: 640, y: 200 },
-        abilities: ["match_details", "apply_tolerance", "make_decision"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "review-1",
-        type: "review",
-        position: { x: 460, y: 350 },
-        abilities: ["manual_review"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "create-1",
-        type: "create",
-        position: { x: 820, y: 200 },
-        abilities: ["Generate Payment Voucher", "Create Journal Entry"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "do-1",
-        type: "do",
-        position: { x: 1000, y: 200 },
-        abilities: ["Execute Payment", "Send Notifications"],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      },
-      {
-        id: "complete-1",
-        type: "complete",
-        position: { x: 1180, y: 200 },
-        abilities: ["update_invoice_status", "notify_stakeholders", "archive_documents"],
-        objectInputs: [],
-        objectOutputs: ["review_response", "approval_status", "audit_trail"],
-        isDefault: true,
-      },
-    ],
-    connections: [
-      { id: "intake-1-understand-1", from: "intake-1", to: "understand-1" },
-      { id: "understand-1-prepare-1", from: "understand-1", to: "prepare-1" },
-      { id: "prepare-1-decide-1", from: "prepare-1", to: "decide-1" },
-      { id: "decide-1-review-1", from: "decide-1", to: "review-1" },
-      { id: "review-1-create-1", from: "review-1", to: "create-1" },
-      { id: "create-1-do-1", from: "create-1", to: "do-1" },
-      { id: "do-1-complete-1", from: "do-1", to: "complete-1" },
-    ],
-  },
-}
-
-// Ability data for both processes
-const ABILITY_DATA = {
-  receive_invoice: {
-    inputs: [],
-    instructions:
-      "Acquire invoice from configured data source (S3, Email, API, etc).\nValidate basic structure and required fields are present.",
-    outputs: ["invoice"],
-  },
-  "Analyze Document Structure": {
-    inputs: ["invoice"],
-    instructions:
-      "Analyze the invoice structure to identify sections:\nheader, line items, totals, tax information, payment terms.",
-    outputs: ["invoice.documentStructure", "invoice.hasValidFormat", "invoice.structureAnomalies"],
-  },
-  "Extract Key Information": {
-    inputs: ["invoice"],
-    instructions:
-      "Extract critical business information from invoice:\nvendor details, amounts, dates, payment terms, tax info.",
-    outputs: ["invoice.paymentTerms", "invoice.taxRate", "invoice.discountAmount", "invoice.netAmount"],
-  },
-  find_matching_po: {
-    inputs: ["invoice.vendorId", "invoice.invoiceDate", "invoice.totalAmount", "invoice.poReference"],
-    instructions: "Search for matching Purchase Order using vendor ID,\ndates, amounts, and reference numbers.",
-    outputs: ["purchase_order"],
-  },
-  manual_review: {
-    inputs: [
-      "approval_status.decision",
-      "approval_status.reason",
-      "invoice.invoiceNumber",
-      "invoice.vendorName",
-      "invoice.totalAmount",
-      "invoice.matchingResult.discrepancies",
-    ],
-    instructions: "Create review request for human decision when\nauto-approval is not possible.",
-    outputs: ["review_request", "human_review_response"],
-  },
-}
-
 // Object Input/Output definitions
 const OBJECT_INPUTS = {
   intake: [
@@ -548,44 +253,6 @@ const OBJECT_OUTPUTS = {
     "resolution_record",
     "customer_feedback",
   ],
-}
-
-const ABILITY_RECOMMENDATIONS = {
-  "invoice-processing": {
-    understand: [
-      "Apply OCR for scanned documents",
-      "Detect invoice language automatically",
-      "Extract tax information",
-      "Identify invoice currency",
-    ],
-    prepare: [
-      "Validate vendor master data",
-      "Check purchase order status",
-      "Verify goods receipt completeness",
-      "Load goods receipt completeness",
-      "Load company-specific business rules",
-    ],
-    decide: [
-      "Apply three-way matching logic",
-      "Calculate tolerance variances",
-      "Flag exceptions for review",
-      "Auto-approve within tolerance",
-    ],
-  },
-  "customer-support": {
-    understand: [
-      "Apply sentiment analysis to inquiry",
-      "Extract product/service references",
-      "Identify customer tier and history",
-      "Detect issue complexity level",
-    ],
-    prepare: [
-      "Load customer interaction history",
-      "Check service status and outages",
-      "Prepare personalized templates",
-      "Set escalation thresholds",
-    ],
-  },
 }
 
 const SAMPLE_DATA = {
@@ -623,86 +290,6 @@ const SAMPLE_DATA = {
       output: { status: "completed", archived: true, notifications: "sent", dashboardUpdated: true },
     },
   },
-  "customer-support": {
-    intake: {
-      input: { customerEmail: "customer@example.com", inquiry: "Product not working", channel: "email" },
-      output: { ticketId: "TKT-2024-001", customerId: "CUST-001", priority: "medium", category: "technical" },
-    },
-    understand: {
-      input: { customerData: "profile_info", inquiryText: "analyzed_content" },
-      output: { intent: "product_issue", sentiment: "frustrated", category: "technical_support", confidence: 0.92 },
-    },
-    prepare: {
-      input: { customerProfile: "tier_gold", issueCategory: "technical" },
-      output: { assignedTeam: "technical_support", sla: "4_hours", knowledgeArticles: "found_3_articles" },
-    },
-    decide: {
-      input: { issueComplexity: "medium", customerTier: "gold" },
-      output: { routing: "senior_agent", automation: "not_eligible", escalation: "standard" },
-    },
-    review: {
-      input: { agentAssignment: "agent_123", issueDetails: "technical_problem" },
-      output: { agentResponse: "solution_provided", qualityCheck: "passed", approved: true },
-    },
-    create: {
-      input: { solution: "restart_device", customerPrefs: "email_preferred" },
-      output: { responseMessage: "personalized_email", followUp: "scheduled_24h", survey: "prepared" },
-    },
-    do: {
-      input: { responseReady: "email_composed", deliveryChannel: "email" },
-      output: { messageSent: "delivered", customerNotified: true, systemsUpdated: "complete" },
-    },
-    complete: {
-      input: { ticketResolved: true, customerFeedback: "satisfied" },
-      output: { ticketClosed: true, metrics: "calculated", knowledgeUpdated: true, archived: "complete" },
-    },
-  },
-}
-
-// Custom ability objects with sample data
-const CUSTOM_ABILITY_OBJECTS = {
-  Invoice_new: {
-    fieldCount: 15,
-    isEmpty: false,
-    isPopulated: true,
-    sampleData: {
-      invoiceId: "INV-2024-001",
-      invoiceNumber: "INV-2024-001",
-      vendorId: "VEN-001",
-      vendorName: "Acme Corp",
-      totalAmount: 1500.0,
-      invoiceDate: "2024-01-15",
-      dueDate: "2024-02-15",
-      documentType: "Standard Invoice",
-      poReference: "PO-2024-456",
-      lineItems: [
-        {
-          description: "Office Supplies",
-          amount: 750.0,
-          quantity: 10,
-          glCode: "GL-5001",
-        },
-        {
-          description: "Software License",
-          amount: 750.0,
-          quantity: 1,
-          glCode: "GL-6001",
-        },
-      ],
-      paymentTerms: "Net 30",
-      taxRate: 0.08,
-      discountAmount: 0,
-      netAmount: 1500.0,
-      language: "en",
-    },
-  },
-  Purchase_order: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Goods_receipt: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Review_request: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Review_response: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Notify_vendor: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Approval_status: { fieldCount: 0, isEmpty: true, isPopulated: false },
-  Archive_docs: { fieldCount: 0, isEmpty: true, isPopulated: false },
 }
 
 export default function ProcessSpine() {
@@ -711,26 +298,12 @@ export default function ProcessSpine() {
     "process-blueprint",
   )
 
-  // Add after the existing activeLeftTab state
-  const [activeBlueprintTab, setActiveBlueprintTab] = useState<"list" | "flow">("list")
-  const [blueprintStep, setBlueprintStep] = useState<"pick" | "scratch" | "template">("pick")
-  const [blueprintChoice, setBlueprintChoice] = useState<"scratch" | "template">("")
-  const [templateBlueprintChoice, setTemplateBlueprintChoice] = useState<string>("")
-
-  // Blueprint-specific states
-  const [blueprints] = useState<
-    Array<{ id: string; name: string; stages: number; abilities: number; lastModified: string }>
-  >([
-    { id: "bp-1", name: "Invoice processing 2-way blueprint", stages: 6, abilities: 15, lastModified: "2025-07-01" },
-    { id: "bp-2", name: "Invoice processing 3-way blueprint", stages: 9, abilities: 23, lastModified: "2025-07-02" },
-  ])
-
-  const [viewingBlueprintId, setViewingBlueprintId] = useState<string | null>(null)
-  const [viewingBlueprintName, setViewingBlueprintName] = useState<string>("")
-
-  // Blueprint flow builder states (duplicate of spine states)
-  const [blueprintSelectedProcess, setBlueprintSelectedProcess] = useState("invoice-processing")
-  const [blueprintNodes, setBlueprintNodes] = useState([
+  // Process Spine states
+  const [spineView, setSpineView] = useState<"list" | "flow">("list")
+  const [viewingSpineId, setViewingSpineId] = useState<string | null>(null)
+  const [viewingSpineName, setViewingSpineName] = useState<string>("")
+  const [selectedProcess, setSelectedProcess] = useState<string>("invoice-processing")
+  const [nodes, setNodes] = useState<any[]>([
     {
       id: "intake-1",
       type: "intake",
@@ -750,29 +323,28 @@ export default function ProcessSpine() {
       isDefault: true,
     },
   ])
-  const [blueprintConnections, setBlueprintConnections] = useState<any[]>([])
-  const [blueprintSelectedStage, setBlueprintSelectedStage] = useState<string | null>(null)
-  const [blueprintAbilityPanelPosition, setBlueprintAbilityPanelPosition] = useState({ x: 0, y: 0 })
-  const [blueprintShowASFPanel, setBlueprintShowASFPanel] = useState(true)
-  const [blueprintShowTestResults, setBlueprintShowTestResults] = useState(false)
-  const [blueprintIsTestRunning, setBlueprintIsTestRunning] = useState(false)
-  const [blueprintTestResults, setBlueprintTestResults] = useState<any[]>([])
-  const [blueprintCurrentTestStage, setBlueprintCurrentTestStage] = useState<string | null>(null)
-  const [blueprintTestCompleted, setBlueprintTestCompleted] = useState(false)
-  const [blueprintTestRunSuccessful, setBlueprintTestRunSuccessful] = useState(false)
-  const [blueprintIsSaving, setBlueprintIsSaving] = useState(false)
-  const [blueprintSaveSuccess, setBlueprintSaveSuccess] = useState(false)
-  const [blueprintExpandedResults, setBlueprintExpandedResults] = useState<Record<string, boolean>>({})
-  const [blueprintDraggedStage, setBlueprintDraggedStage] = useState<string | null>(null)
-  const [blueprintDraggingNode, setBlueprintDraggingNode] = useState<string | null>(null)
-  const [blueprintDragOffset, setBlueprintDragOffset] = useState({ x: 0, y: 0 })
-  const [blueprintConnectingFrom, setBlueprintConnectingFrom] = useState<string | null>(null)
-  const [blueprintConnectionPreview, setBlueprintConnectionPreview] = useState<{ x: number; y: number } | null>(null)
-  const [blueprintHoveredNode, setBlueprintHoveredNode] = useState<string | null>(null)
-  const [blueprintZoom, setBlueprintZoom] = useState(1)
-  const [blueprintPanOffset, setBlueprintPanOffset] = useState({ x: 0, y: 0 })
-  const [blueprintIsPanning, setBlueprintIsPanning] = useState(false)
-  const [blueprintPanStart, setBlueprintPanStart] = useState({ x: 0, y: 0 })
+  const [connections, setConnections] = useState<any[]>([])
+  const [selectedStage, setSelectedStage] = useState<string | null>(null)
+  const [showASFPanel, setShowASFPanel] = useState(true)
+  const [showTestResults, setShowTestResults] = useState(false)
+  const [isTestRunning, setIsTestRunning] = useState(false)
+  const [testResults, setTestResults] = useState<any[]>([])
+  const [currentTestStage, setCurrentTestStage] = useState<string | null>(null)
+  const [testCompleted, setTestCompleted] = useState(false)
+  const [testRunSuccessful, setTestRunSuccessful] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [expandedResults, setExpandedResults] = useState<Record<string, boolean>>({})
+  const [draggedStage, setDraggedStage] = useState<string | null>(null)
+  const [draggingNode, setDraggingNode] = useState<string | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [connectingFrom, setConnectingFrom] = useState<string | null>(null)
+  const [connectionPreview, setConnectionPreview] = useState<{ x: number; y: number } | null>(null)
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
 
   // Jobs tab states
   const [activeJobsTab, setActiveJobsTab] = useState<"test" | "live">("test")
@@ -780,9 +352,11 @@ export default function ProcessSpine() {
   const [showCreateLiveJobModal, setShowCreateLiveJobModal] = useState(false)
   const [showViewLogsModal, setShowViewLogsModal] = useState(false)
   const [selectedJobLogs, setSelectedJobLogs] = useState<any>(null)
+  const [retryingJobs, setRetryingJobs] = useState<Set<string>>(new Set())
 
   // Test job form states
   const [testJobName, setTestJobName] = useState("")
+  const [testJobSpine, setTestJobSpine] = useState("")
   const [testJobType, setTestJobType] = useState<"File" | "JSON">("File")
   const [testJobDataSource, setTestJobDataSource] = useState<"Use Sample Data" | "Add Own Data">("Use Sample Data")
   const [testJobCustomData, setTestJobCustomData] = useState("")
@@ -791,6 +365,7 @@ export default function ProcessSpine() {
 
   // Live job form states
   const [liveJobName, setLiveJobName] = useState("")
+  const [liveJobSpine, setLiveJobSpine] = useState("")
   const [liveJobSituation, setLiveJobSituation] = useState("")
   const [liveJobObjectConnectorMap, setLiveJobObjectConnectorMap] = useState<Record<string, string>>({})
 
@@ -866,6 +441,21 @@ export default function ProcessSpine() {
         },
       ],
     },
+    {
+      id: "lj-2",
+      name: "Failed Customer Support Job",
+      spine: "Customer support baseline spine",
+      status: "failed" as const,
+      active: false,
+      createdAt: "2024-01-12",
+      logs: [
+        {
+          stage: "Intake",
+          input: { situation: "Email Customer Query", connector: "email-connector" },
+          output: { error: "Connection timeout", errorCode: "CONN_001" },
+        },
+      ],
+    },
   ])
 
   const SAMPLE_INVOICE_JSON = {
@@ -898,6 +488,61 @@ export default function ProcessSpine() {
     netAmount: 1500.0,
   }
 
+  const SAMPLE_CUSTOMER_QUERY_JSON = {
+    queryId: "CQ-2024-001",
+    customerId: "CUST-001",
+    customerName: "John Doe",
+    customerEmail: "john.doe@example.com",
+    queryType: "Product Issue",
+    priority: "Medium",
+    subject: "Product not working as expected",
+    description:
+      "I purchased your product last week and it's not functioning properly. The device keeps shutting down randomly.",
+    channel: "Email",
+    timestamp: "2024-01-15T10:30:00Z",
+    customerTier: "Gold",
+    previousTickets: 2,
+    productInfo: {
+      productId: "PROD-123",
+      productName: "Smart Device Pro",
+      purchaseDate: "2024-01-08",
+      warrantyStatus: "Active",
+    },
+    attachments: [
+      {
+        fileName: "error_screenshot.png",
+        fileSize: "2.5MB",
+        fileType: "image",
+      },
+    ],
+  }
+
+  const INVOICE_OBJECT_OPTIONS = [
+    "PO object",
+    "Goods receipt",
+    "Notify vendor",
+    "Review request",
+    "Approval status",
+    "Archive docs",
+  ]
+
+  const CUSTOMER_SUPPORT_OBJECT_OPTIONS = [
+    "Customer history",
+    "Agent request",
+    "Agent response",
+    "Create ticket",
+    "Update ticket",
+  ]
+
+  const INVOICE_SITUATIONS = ["AWS S3 Invoice", "Email Invoice Processing", "API Invoice Intake", "SFTP Invoice Upload"]
+
+  const CUSTOMER_SUPPORT_SITUATIONS = [
+    "Email Customer Query",
+    "Chat Customer Query",
+    "Phone Customer Query",
+    "Web Form Customer Query",
+  ]
+
   const OBJECT_INPUTS_OPTIONS = [
     "PO object",
     "Goods receipt",
@@ -924,18 +569,15 @@ export default function ProcessSpine() {
     "SFTP Invoice Upload",
   ]
 
-  // Handle viewing a spine
-  const [viewingSpineId, setViewingSpineId] = useState<string | null>(null)
-  const [viewingSpineName, setViewingSpineName] = useState<string>("")
-  const [selectedProcess, setSelectedProcess] = useState<string>("invoice-processing")
-  const [nodes, setNodes] = useState<any[]>([])
-  const [connections, setConnections] = useState<any[]>([])
-  const [spineView, setSpineView] = useState<"list" | "flow">("list")
-  const [selectedStage, setSelectedStage] = useState<string | null>(null)
-  const [testResults, setTestResults] = useState<any[]>([])
-  const [testCompleted, setTestCompleted] = useState<boolean>(false)
-  const [testRunSuccessful, setTestRunSuccessful] = useState<boolean>(false)
+  // Spines list data
+  const [spines] = useState<
+    Array<{ id: string; name: string; stages: number; abilities: number; lastModified: string }>
+  >([
+    { id: "sp-1", name: "Invoice processing 2-way spine", stages: 6, abilities: 15, lastModified: "2025-07-01" },
+    { id: "sp-2", name: "Customer support baseline spine", stages: 3, abilities: 8, lastModified: "2025-07-02" },
+  ])
 
+  // Handle viewing a spine
   const handleViewSpine = (spineId: string) => {
     const spineData = PRE_POPULATED_SPINES[spineId]
     if (spineData) {
@@ -945,7 +587,6 @@ export default function ProcessSpine() {
       setNodes(spineData.nodes)
       setConnections(spineData.connections)
       setSpineView("flow")
-      setBlueprintStep("scratch") // Show the flow builder
     }
   }
 
@@ -954,46 +595,231 @@ export default function ProcessSpine() {
     setSpineView("list")
     setViewingSpineId(null)
     setViewingSpineName("")
-    setBlueprintStep("pick")
-    // Reset flow builder state
     setSelectedStage(null)
     setTestResults([])
     setTestCompleted(false)
     setTestRunSuccessful(false)
   }
 
-  // Add after handleBackToSpinesList function
-  const handleViewBlueprint = (blueprintId: string) => {
-    const blueprintData = PRE_POPULATED_BLUEPRINTS[blueprintId]
-    if (blueprintData) {
-      setViewingBlueprintId(blueprintId)
-      setViewingBlueprintName(blueprintData.name)
-      setBlueprintSelectedProcess(blueprintData.selectedProcess)
-      setBlueprintNodes(blueprintData.nodes)
-      setBlueprintConnections(blueprintData.connections)
-      setActiveBlueprintTab("flow")
-      setBlueprintStep("scratch")
+  // Canvas event handlers
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setIsPanning(true)
+      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y })
     }
   }
 
-  const handleBackToBlueprintsList = () => {
-    setActiveBlueprintTab("list")
-    setViewingBlueprintId(null)
-    setViewingBlueprintName("")
-    setBlueprintStep("pick")
-    setBlueprintSelectedStage(null)
-    setBlueprintTestResults([])
-    setBlueprintTestCompleted(false)
-    setBlueprintTestRunSuccessful(false)
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPanOffset({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      })
+    }
+
+    if (draggingNode) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = (e.clientX - rect.left - panOffset.x) / zoom - dragOffset.x
+      const y = (e.clientY - rect.top - panOffset.y) / zoom - dragOffset.y
+
+      setNodes((prev) => prev.map((node) => (node.id === draggingNode ? { ...node, position: { x, y } } : node)))
+    }
+
+    if (connectingFrom && connectionPreview) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setConnectionPreview({
+        x: (e.clientX - rect.left - panOffset.x) / zoom,
+        y: (e.clientY - rect.top - panOffset.y) / zoom,
+      })
+    }
   }
 
-  const handleAddNewBlueprint = () => {
-    setActiveBlueprintTab("flow")
-    setBlueprintStep("pick")
-    setBlueprintChoice("")
-    setTemplateBlueprintChoice("")
+  const handleCanvasMouseUp = () => {
+    setIsPanning(false)
+    setDraggingNode(null)
+    setConnectingFrom(null)
+    setConnectionPreview(null)
   }
 
+  // Node event handlers
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation()
+    const rect = e.currentTarget.getBoundingClientRect()
+    const node = nodes.find((n) => n.id === nodeId)
+    if (node) {
+      setDragOffset({
+        x: (e.clientX - rect.left) / zoom - node.position.x,
+        y: (e.clientY - rect.top) / zoom - node.position.y,
+      })
+      setDraggingNode(nodeId)
+    }
+  }
+
+  const handleNodeClick = (nodeId: string) => {
+    setSelectedStage(nodeId)
+  }
+
+  // Stage palette handlers
+  const handleStageDragStart = (e: React.DragEvent, stageType: string) => {
+    setDraggedStage(stageType)
+    e.dataTransfer.effectAllowed = "copy"
+  }
+
+  const handleCanvasDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (draggedStage) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = (e.clientX - rect.left - panOffset.x) / zoom
+      const y = (e.clientY - rect.top - panOffset.y) / zoom
+
+      const newNode = {
+        id: `${draggedStage}-${Date.now()}`,
+        type: draggedStage,
+        position: { x, y },
+        abilities: [],
+        objectInputs: [],
+        objectOutputs: [],
+        isDefault: false,
+      }
+
+      setNodes((prev) => [...prev, newNode])
+      setDraggedStage(null)
+    }
+  }
+
+  const handleCanvasDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  // Connection handlers
+  const handleConnectionStart = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation()
+    setConnectingFrom(nodeId)
+    const rect = e.currentTarget.getBoundingClientRect()
+    setConnectionPreview({
+      x: (e.clientX - rect.left - panOffset.x) / zoom,
+      y: (e.clientY - rect.top - panOffset.y) / zoom,
+    })
+  }
+
+  const handleConnectionEnd = (nodeId: string) => {
+    if (connectingFrom && connectingFrom !== nodeId) {
+      const newConnection = {
+        id: `${connectingFrom}-${nodeId}`,
+        from: connectingFrom,
+        to: nodeId,
+      }
+      setConnections((prev) => [...prev, newConnection])
+    }
+    setConnectingFrom(null)
+    setConnectionPreview(null)
+  }
+
+  // Ability management
+  const handleAddAbility = (nodeId: string, abilityName: string) => {
+    setNodes((prev) =>
+      prev.map((node) => (node.id === nodeId ? { ...node, abilities: [...node.abilities, abilityName] } : node)),
+    )
+  }
+
+  const handleRemoveAbility = (nodeId: string, abilityIndex: number) => {
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeId ? { ...node, abilities: node.abilities.filter((_, index) => index !== abilityIndex) } : node,
+      ),
+    )
+  }
+
+  // Object input/output management
+  const handleAddObjectInput = (nodeId: string, objectName: string) => {
+    setNodes((prev) =>
+      prev.map((node) => (node.id === nodeId ? { ...node, objectInputs: [...node.objectInputs, objectName] } : node)),
+    )
+  }
+
+  const handleRemoveObjectInput = (nodeId: string, objectIndex: number) => {
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeId
+          ? { ...node, objectInputs: node.objectInputs.filter((_, index) => index !== objectIndex) }
+          : node,
+      ),
+    )
+  }
+
+  const handleAddObjectOutput = (nodeId: string, objectName: string) => {
+    setNodes((prev) =>
+      prev.map((node) => (node.id === nodeId ? { ...node, objectOutputs: [...node.objectOutputs, objectName] } : node)),
+    )
+  }
+
+  const handleRemoveObjectOutput = (nodeId: string, objectIndex: number) => {
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeId
+          ? { ...node, objectOutputs: node.objectOutputs.filter((_, index) => index !== objectIndex) }
+          : node,
+      ),
+    )
+  }
+
+  // Test run functionality
+  const handleTestRun = async () => {
+    setIsTestRunning(true)
+    setShowTestResults(true)
+    setTestResults([])
+    setTestCompleted(false)
+    setTestRunSuccessful(false)
+
+    const sortedNodes = [...nodes].sort((a, b) => a.position.x - b.position.x)
+
+    for (let i = 0; i < sortedNodes.length; i++) {
+      const node = sortedNodes[i]
+      setCurrentTestStage(node.id)
+
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      const stageData = SAMPLE_DATA[selectedProcess]?.[node.type]
+      if (stageData) {
+        setTestResults((prev) => [
+          ...prev,
+          {
+            stage: node.type,
+            nodeId: node.id,
+            input: stageData.input,
+            output: stageData.output,
+            status: "success",
+          },
+        ])
+      }
+    }
+
+    setCurrentTestStage(null)
+    setIsTestRunning(false)
+    setTestCompleted(true)
+    setTestRunSuccessful(true)
+  }
+
+  // Save functionality
+  const handleSave = async () => {
+    setIsSaving(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsSaving(false)
+    setSaveSuccess(true)
+    setTimeout(() => setSaveSuccess(false), 2000)
+  }
+
+  // Delete connection
+  const handleDeleteConnection = (connectionId: string) => {
+    setConnections((prev) => prev.filter((conn) => conn.id !== connectionId))
+  }
+
+  // Get stage config
+  const getStageConfig = (stageType: string) => {
+    return PROCESS_CONFIGS[selectedProcess]?.stages[stageType]
+  }
+
+  // Jobs handlers
   const handleViewLogs = (job: any) => {
     setSelectedJobLogs(job)
     setShowViewLogsModal(true)
@@ -1001,21 +827,19 @@ export default function ProcessSpine() {
 
   const handleDeleteTestJob = (jobId: string) => {
     if (window.confirm("Are you sure you want to delete this test job?")) {
-      // In a real app, this would delete from the backend
       console.log("Deleting test job:", jobId)
     }
   }
 
   const handleCreateTestJob = () => {
-    // Validation
-    if (!testJobName.trim()) {
-      alert("Please enter a test job name")
+    if (!testJobName.trim() || !testJobSpine) {
+      alert("Please enter a test job name and select a process spine")
       return
     }
 
-    // Create test job logic here
     console.log("Creating test job:", {
       name: testJobName,
+      spine: testJobSpine,
       type: testJobType,
       dataSource: testJobDataSource,
       customData: testJobCustomData,
@@ -1023,8 +847,8 @@ export default function ProcessSpine() {
       objectConnectorMap: testJobObjectConnectorMap,
     })
 
-    // Reset form and close modal
     setTestJobName("")
+    setTestJobSpine("")
     setTestJobType("File")
     setTestJobDataSource("Use Sample Data")
     setTestJobCustomData("")
@@ -1034,21 +858,20 @@ export default function ProcessSpine() {
   }
 
   const handleCreateLiveJob = () => {
-    // Validation
-    if (!liveJobName.trim()) {
-      alert("Please enter a live job name")
+    if (!liveJobName.trim() || !liveJobSpine) {
+      alert("Please enter a live job name and select a process spine")
       return
     }
 
-    // Create live job logic here
     console.log("Creating live job:", {
       name: liveJobName,
+      spine: liveJobSpine,
       situation: liveJobSituation,
       objectConnectorMap: liveJobObjectConnectorMap,
     })
 
-    // Reset form and close modal
     setLiveJobName("")
+    setLiveJobSpine("")
     setLiveJobSituation("")
     setLiveJobObjectConnectorMap({})
     setShowCreateLiveJobModal(false)
@@ -1062,6 +885,82 @@ export default function ProcessSpine() {
     if (window.confirm("Are you sure you want to delete this live job?")) {
       setLiveJobs((prev) => prev.filter((job) => job.id !== jobId))
     }
+  }
+
+  const handleRetryLiveJob = async (jobId: string) => {
+    setRetryingJobs((prev) => new Set(prev).add(jobId))
+
+    try {
+      // Simulate retry process
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Update job status to running after successful retry
+      setLiveJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId
+            ? {
+                ...job,
+                status: "running" as const,
+                active: true,
+                logs: [
+                  ...job.logs,
+                  {
+                    stage: "Retry",
+                    input: { retryAttempt: 1, timestamp: new Date().toISOString() },
+                    output: { status: "retry_successful", message: "Job restarted successfully" },
+                  },
+                ],
+              }
+            : job,
+        ),
+      )
+
+      console.log("Job retried successfully:", jobId)
+    } catch (error) {
+      console.error("Failed to retry job:", error)
+      // Optionally show error message to user
+    } finally {
+      setRetryingJobs((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(jobId)
+        return newSet
+      })
+    }
+  }
+
+  // Render connection line
+  const renderConnection = (connection: any) => {
+    const fromNode = nodes.find((n) => n.id === connection.from)
+    const toNode = nodes.find((n) => n.id === connection.to)
+
+    if (!fromNode || !toNode) return null
+
+    const fromX = fromNode.position.x + 80
+    const fromY = fromNode.position.y + 40
+    const toX = toNode.position.x
+    const toY = toNode.position.y + 40
+
+    return (
+      <g key={connection.id}>
+        <line x1={fromX} y1={fromY} x2={toX} y2={toY} stroke="#6b7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+        <circle
+          cx={(fromX + toX) / 2}
+          cy={(fromY + toY) / 2}
+          r="8"
+          fill="#ef4444"
+          className="cursor-pointer hover:fill-red-600"
+          onClick={() => handleDeleteConnection(connection.id)}
+        />
+        <text
+          x={(fromX + toX) / 2}
+          y={(fromY + toY) / 2 + 1}
+          textAnchor="middle"
+          className="text-xs fill-white pointer-events-none"
+        >
+          ×
+        </text>
+      </g>
+    )
   }
 
   return (
@@ -1113,6 +1012,453 @@ export default function ProcessSpine() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
+        {activeLeftTab === "process-blueprint" && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Process Blueprint</h3>
+              <p className="text-gray-600">Process Blueprint content will be implemented here</p>
+            </div>
+          </div>
+        )}
+
+        {activeLeftTab === "process-spine" && (
+          <div className="h-full flex flex-col">
+            {spineView === "list" ? (
+              // Spine List View
+              <div className="h-full flex flex-col">
+                <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">Process Spines</h2>
+                    <p className="text-gray-600 text-sm">Create, view, and edit process spines.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      New Process Spine
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {spines.map((spine) => (
+                    <div key={spine.id} className="bg-white rounded-lg shadow p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-800 truncate">{spine.name}</h3>
+                          <div className="mt-3 text-sm text-gray-700">
+                            <span className="mr-4">Stages: {spine.stages}</span>
+                            <span>Abilities: {spine.abilities}</span>
+                          </div>
+                          <div className="mt-2 text-xs text-gray-500">Last modified: {spine.lastModified}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm"
+                            onClick={() => handleViewSpine(spine.id)}
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Flow Builder View
+              <div className="h-full flex flex-col">
+                {/* Header with navigation */}
+                <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+                      onClick={handleBackToSpinesList}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="text-sm">Process Spines</span>
+                    </button>
+                    <div className="text-gray-400">/</div>
+                    <h2 className="text-xl font-semibold text-gray-800">{viewingSpineName || "New Process Spine"}</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
+                      onClick={handleTestRun}
+                      disabled={isTestRunning}
+                    >
+                      <Play className="w-4 h-4" />
+                      {isTestRunning ? "Running..." : "Test Run"}
+                    </button>
+                    <button
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main flow builder area */}
+                <div className="flex-1 flex">
+                  {/* Canvas area */}
+                  <div className="flex-1 relative overflow-hidden">
+                    <svg
+                      className="w-full h-full cursor-move"
+                      onMouseDown={handleCanvasMouseDown}
+                      onMouseMove={handleCanvasMouseMove}
+                      onMouseUp={handleCanvasMouseUp}
+                      onDrop={handleCanvasDrop}
+                      onDragOver={handleCanvasDragOver}
+                    >
+                      <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                          <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+                        </marker>
+                      </defs>
+
+                      <g transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`}>
+                        {/* Render connections */}
+                        {connections.map(renderConnection)}
+
+                        {/* Connection preview */}
+                        {connectingFrom && connectionPreview && (
+                          <line
+                            x1={nodes.find((n) => n.id === connectingFrom)?.position.x + 80}
+                            y1={nodes.find((n) => n.id === connectingFrom)?.position.y + 40}
+                            x2={connectionPreview.x}
+                            y2={connectionPreview.y}
+                            stroke="#6b7280"
+                            strokeWidth="2"
+                            strokeDasharray="5,5"
+                          />
+                        )}
+
+                        {/* Render nodes */}
+                        {nodes.map((node) => {
+                          const stageConfig = getStageConfig(node.type)
+                          if (!stageConfig) return null
+
+                          const IconComponent = stageConfig.icon
+                          const isSelected = selectedStage === node.id
+                          const isTestingStage = currentTestStage === node.id
+
+                          return (
+                            <g key={node.id}>
+                              <foreignObject
+                                x={node.position.x}
+                                y={node.position.y}
+                                width="160"
+                                height="80"
+                                className="overflow-visible"
+                              >
+                                <div
+                                  className={`w-40 h-20 rounded-lg border-2 cursor-pointer transition-all ${
+                                    isSelected
+                                      ? "border-orange-500 shadow-lg"
+                                      : isTestingStage
+                                        ? "border-blue-500 shadow-lg animate-pulse"
+                                        : "border-gray-300 hover:border-gray-400"
+                                  } ${stageConfig.color} text-white flex flex-col items-center justify-center relative`}
+                                  onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                                  onClick={() => handleNodeClick(node.id)}
+                                  onMouseEnter={() => setHoveredNode(node.id)}
+                                  onMouseLeave={() => setHoveredNode(null)}
+                                >
+                                  <IconComponent className="w-5 h-5 mb-1" />
+                                  <span className="text-xs font-medium">{stageConfig.name}</span>
+
+                                  {/* Connection points */}
+                                  {stageConfig.connectionType !== "target" && (
+                                    <div
+                                      className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-400 rounded-full cursor-crosshair hover:bg-gray-600"
+                                      onMouseDown={(e) => handleConnectionStart(e, node.id)}
+                                    />
+                                  )}
+                                  {stageConfig.connectionType !== "source" && (
+                                    <div
+                                      className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-400 rounded-full cursor-crosshair hover:bg-gray-600"
+                                      onMouseUp={() => handleConnectionEnd(node.id)}
+                                    />
+                                  )}
+
+                                  {/* Ability count badge */}
+                                  {node.abilities.length > 0 && (
+                                    <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                      {node.abilities.length}
+                                    </div>
+                                  )}
+                                </div>
+                              </foreignObject>
+                            </g>
+                          )
+                        })}
+                      </g>
+                    </svg>
+
+                    {/* Stage configuration panel */}
+                    {selectedStage && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-h-80 overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {getStageConfig(nodes.find((n) => n.id === selectedStage)?.type)?.name} Configuration
+                          </h3>
+                          <button className="text-gray-400 hover:text-gray-600" onClick={() => setSelectedStage(null)}>
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {(() => {
+                          const node = nodes.find((n) => n.id === selectedStage)
+                          if (!node) return null
+
+                          const isIntakeOrComplete = node.type === "intake" || node.type === "complete"
+
+                          return (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Object Inputs/Outputs for Intake and Complete */}
+                              {isIntakeOrComplete && (
+                                <>
+                                  {node.type === "intake" && (
+                                    <div>
+                                      <h4 className="font-medium text-gray-800 mb-2">Object Inputs</h4>
+                                      <div className="space-y-2">
+                                        {node.objectInputs.map((input, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded"
+                                          >
+                                            <span className="text-sm text-gray-700">{input}</span>
+                                            <button
+                                              className="text-red-600 hover:text-red-800"
+                                              onClick={() => handleRemoveObjectInput(selectedStage, index)}
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <select
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                          onChange={(e) => {
+                                            if (e.target.value) {
+                                              handleAddObjectInput(selectedStage, e.target.value)
+                                              e.target.value = ""
+                                            }
+                                          }}
+                                        >
+                                          <option value="">Add object input...</option>
+                                          {OBJECT_INPUTS.intake?.map((input) => (
+                                            <option key={input} value={input}>
+                                              {input}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {node.type === "complete" && (
+                                    <div>
+                                      <h4 className="font-medium text-gray-800 mb-2">Object Outputs</h4>
+                                      <div className="space-y-2">
+                                        {node.objectOutputs.map((output, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded"
+                                          >
+                                            <span className="text-sm text-gray-700">{output}</span>
+                                            <button
+                                              className="text-red-600 hover:text-red-800"
+                                              onClick={() => handleRemoveObjectOutput(selectedStage, index)}
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <select
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                          onChange={(e) => {
+                                            if (e.target.value) {
+                                              handleAddObjectOutput(selectedStage, e.target.value)
+                                              e.target.value = ""
+                                            }
+                                          }}
+                                        >
+                                          <option value="">Add object output...</option>
+                                          {OBJECT_OUTPUTS.complete?.map((output) => (
+                                            <option key={output} value={output}>
+                                              {output}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Abilities List for all stages */}
+                              <div className={isIntakeOrComplete ? "" : "lg:col-span-2"}>
+                                <h4 className="font-medium text-gray-800 mb-2">Abilities List</h4>
+                                <div className="space-y-2">
+                                  {node.abilities.map((ability, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded group"
+                                    >
+                                      <span className="text-sm text-gray-700">{ability}</span>
+                                      <div className="flex items-center gap-2">
+                                        <button className="text-orange-600 hover:text-orange-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Settings className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          className="text-red-600 hover:text-red-800"
+                                          onClick={() => handleRemoveAbility(selectedStage, index)}
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+
+                                  {/* Add ability dropdown */}
+                                  <select
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                    onChange={(e) => {
+                                      if (e.target.value) {
+                                        handleAddAbility(selectedStage, e.target.value)
+                                        e.target.value = ""
+                                      }
+                                    }}
+                                  >
+                                    <option value="">Add ability...</option>
+                                    {getStageConfig(node.type)?.abilities.map((ability) => (
+                                      <option key={ability} value={ability}>
+                                        {ability}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right sidebar - Stage palette */}
+                  {showASFPanel && (
+                    <div className="w-64 bg-white border-l border-gray-200 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-800">ASF Stages</h3>
+                        <button className="text-gray-400 hover:text-gray-600" onClick={() => setShowASFPanel(false)}>
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {PROCESS_CONFIGS[selectedProcess]?.availableStages.map((stageType) => {
+                          const stageConfig = getStageConfig(stageType)
+                          if (!stageConfig) return null
+
+                          const IconComponent = stageConfig.icon
+
+                          return (
+                            <div
+                              key={stageType}
+                              className={`${stageConfig.color} text-white p-3 rounded-lg cursor-grab active:cursor-grabbing flex items-center gap-3 hover:opacity-90 transition-opacity`}
+                              draggable
+                              onDragStart={(e) => handleStageDragStart(e, stageType)}
+                            >
+                              <IconComponent className="w-5 h-5" />
+                              <span className="text-sm font-medium">{stageConfig.name}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div className="mt-6 text-xs text-gray-500">
+                        Drag stages to the canvas to add them to your process spine.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Test results panel */}
+                {showTestResults && (
+                  <div className="bg-white border-t border-gray-200 p-4 max-h-80 overflow-y-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">Test Results</h3>
+                      <button className="text-gray-400 hover:text-gray-600" onClick={() => setShowTestResults(false)}>
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {isTestRunning && (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Running test...</p>
+                      </div>
+                    )}
+
+                    {testCompleted && (
+                      <div className="space-y-4">
+                        <div
+                          className={`p-3 rounded-lg ${
+                            testRunSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {testRunSuccessful ? "✓ Test completed successfully" : "✗ Test failed"}
+                        </div>
+
+                        {testResults.map((result, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div
+                              className="flex items-center justify-between cursor-pointer"
+                              onClick={() =>
+                                setExpandedResults((prev) => ({
+                                  ...prev,
+                                  [result.nodeId]: !prev[result.nodeId],
+                                }))
+                              }
+                            >
+                              <h4 className="font-medium text-gray-800 capitalize">{result.stage}</h4>
+                              {expandedResults[result.nodeId] ? (
+                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-gray-600" />
+                              )}
+                            </div>
+
+                            {expandedResults[result.nodeId] && (
+                              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-600 mb-2">Input</h5>
+                                  <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
+                                    {JSON.stringify(result.input, null, 2)}
+                                  </pre>
+                                </div>
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-600 mb-2">Output</h5>
+                                  <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
+                                    {JSON.stringify(result.output, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeLeftTab === "jobs" && (
           <div className="h-full flex flex-col">
             {/* Header */}
@@ -1311,6 +1657,20 @@ export default function ProcessSpine() {
                                 >
                                   View Logs
                                 </button>
+                                {job.status === "failed" && (
+                                  <button
+                                    className="text-blue-600 hover:text-blue-900 p-1 disabled:opacity-50"
+                                    onClick={() => handleRetryLiveJob(job.id)}
+                                    disabled={retryingJobs.has(job.id)}
+                                    title="Retry job"
+                                  >
+                                    {retryingJobs.has(job.id) ? (
+                                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <RotateCcw className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
                                 <button
                                   className="text-red-600 hover:text-red-900 p-1"
                                   onClick={() => handleDeleteLiveJob(job.id)}
@@ -1327,25 +1687,6 @@ export default function ProcessSpine() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Other tabs content would go here */}
-        {activeLeftTab === "process-blueprint" && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Process Blueprint</h3>
-              <p className="text-gray-600">Process Blueprint content will be implemented here</p>
-            </div>
-          </div>
-        )}
-
-        {activeLeftTab === "process-spine" && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Process Spine</h3>
-              <p className="text-gray-600">Process Spine content will be implemented here</p>
             </div>
           </div>
         )}
@@ -1375,103 +1716,131 @@ export default function ProcessSpine() {
                 />
               </div>
 
-              {/* Load Sample Situation */}
+              {/* Select Process Spine */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Load Sample Situation</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Object</label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-                      value="Invoice"
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Type</label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      value={testJobType}
-                      onChange={(e) => setTestJobType(e.target.value as "File" | "JSON")}
-                    >
-                      <option value="File">File</option>
-                      <option value="JSON">JSON</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Data</label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      value={testJobDataSource}
-                      onChange={(e) => setTestJobDataSource(e.target.value as "Use Sample Data" | "Add Own Data")}
-                    >
-                      <option value="Use Sample Data">Use Sample Data</option>
-                      <option value="Add Own Data">Add Own Data</option>
-                    </select>
-                  </div>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Process Spine</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={testJobSpine}
+                  onChange={(e) => setTestJobSpine(e.target.value)}
+                >
+                  <option value="">Select process spine</option>
+                  <option value="invoice-2way">Invoice 2way matching</option>
+                  <option value="customer-support">Customer support</option>
+                </select>
               </div>
 
-              {/* Dynamic Data Section */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Data</h4>
-                {testJobDataSource === "Use Sample Data" ? (
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <p className="text-sm text-gray-600 mb-2">Sample Invoice Data:</p>
-                    <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
-                      {JSON.stringify(SAMPLE_INVOICE_JSON, null, 2)}
-                    </pre>
-                  </div>
-                ) : testJobType === "File" ? (
-                  <div>
-                    <input
-                      type="file"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      onChange={(e) => setTestJobFile(e.target.files?.[0] || null)}
-                      accept=".pdf,.json,.xml,.csv"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Supported formats: PDF, JSON, XML, CSV</p>
-                  </div>
-                ) : (
-                  <textarea
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    rows={6}
-                    value={testJobCustomData}
-                    onChange={(e) => setTestJobCustomData(e.target.value)}
-                    placeholder="Enter JSON data..."
-                  />
-                )}
-              </div>
-
-              {/* Object-Connector-Map */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
-                <div className="space-y-3">
-                  {OBJECT_INPUTS_OPTIONS.map((objectName) => (
-                    <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
-                      <div className="text-sm text-gray-700">{objectName}</div>
+              {/* Load Sample Situation - Only show if spine is selected */}
+              {testJobSpine && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Load Sample Situation</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Object</label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                        value={testJobSpine === "invoice-2way" ? "Invoice" : "Customer query"}
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Type</label>
                       <select
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={testJobObjectConnectorMap[objectName] || ""}
-                        onChange={(e) =>
-                          setTestJobObjectConnectorMap((prev) => ({
-                            ...prev,
-                            [objectName]: e.target.value,
-                          }))
-                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={testJobType}
+                        onChange={(e) => setTestJobType(e.target.value as "File" | "JSON")}
                       >
-                        <option value="">Select connector</option>
-                        {CONNECTOR_OPTIONS.map((connector) => (
-                          <option key={connector} value={connector}>
-                            {connector}
-                          </option>
-                        ))}
+                        <option value="File">File</option>
+                        <option value="JSON">JSON</option>
                       </select>
                     </div>
-                  ))}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Data</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={testJobDataSource}
+                        onChange={(e) => setTestJobDataSource(e.target.value as "Use Sample Data" | "Add Own Data")}
+                      >
+                        <option value="Use Sample Data">Use Sample Data</option>
+                        <option value="Add Own Data">Add Own Data</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Dynamic Data Section - Only show if spine is selected */}
+              {testJobSpine && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Data</h4>
+                  {testJobDataSource === "Use Sample Data" ? (
+                    <div className="bg-gray-50 p-4 rounded-md">
+                      <p className="text-sm text-gray-600 mb-2">
+                        Sample {testJobSpine === "invoice-2way" ? "Invoice" : "Customer Query"} Data:
+                      </p>
+                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
+                        {JSON.stringify(
+                          testJobSpine === "invoice-2way" ? SAMPLE_INVOICE_JSON : SAMPLE_CUSTOMER_QUERY_JSON,
+                          null,
+                          2,
+                        )}
+                      </pre>
+                    </div>
+                  ) : testJobType === "File" ? (
+                    <div>
+                      <input
+                        type="file"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        onChange={(e) => setTestJobFile(e.target.files?.[0] || null)}
+                        accept=".pdf,.json,.xml,.csv"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Supported formats: PDF, JSON, XML, CSV</p>
+                    </div>
+                  ) : (
+                    <textarea
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      rows={6}
+                      value={testJobCustomData}
+                      onChange={(e) => setTestJobCustomData(e.target.value)}
+                      placeholder="Enter JSON data..."
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Object-Connector-Map - Only show if spine is selected */}
+              {testJobSpine && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
+                  <div className="space-y-3">
+                    {(testJobSpine === "invoice-2way" ? INVOICE_OBJECT_OPTIONS : CUSTOMER_SUPPORT_OBJECT_OPTIONS).map(
+                      (objectName) => (
+                        <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
+                          <div className="text-sm text-gray-700">{objectName}</div>
+                          <select
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            value={testJobObjectConnectorMap[objectName] || ""}
+                            onChange={(e) =>
+                              setTestJobObjectConnectorMap((prev) => ({
+                                ...prev,
+                                [objectName]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Select connector</option>
+                            {CONNECTOR_OPTIONS.map((connector) => (
+                              <option key={connector} value={connector}>
+                                {connector}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
@@ -1484,6 +1853,7 @@ export default function ProcessSpine() {
               <button
                 className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
                 onClick={handleCreateTestJob}
+                disabled={!testJobName.trim() || !testJobSpine}
               >
                 Create Test Job
               </button>
@@ -1516,51 +1886,73 @@ export default function ProcessSpine() {
                 />
               </div>
 
-              {/* Add Situation */}
+              {/* Select Process Spine */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Add Situation</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Process Spine</label>
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  value={liveJobSituation}
-                  onChange={(e) => setLiveJobSituation(e.target.value)}
+                  value={liveJobSpine}
+                  onChange={(e) => setLiveJobSpine(e.target.value)}
                 >
-                  <option value="">Select situation</option>
-                  {AVAILABLE_SITUATIONS.map((situation) => (
-                    <option key={situation} value={situation}>
-                      {situation}
-                    </option>
-                  ))}
+                  <option value="">Select process spine</option>
+                  <option value="invoice-2way">Invoice 2way matching</option>
+                  <option value="customer-support">Customer support</option>
                 </select>
               </div>
 
-              {/* Object-Connector-Map */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
-                <div className="space-y-3">
-                  {OBJECT_INPUTS_OPTIONS.map((objectName) => (
-                    <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
-                      <div className="text-sm text-gray-700">{objectName}</div>
-                      <select
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={liveJobObjectConnectorMap[objectName] || ""}
-                        onChange={(e) =>
-                          setLiveJobObjectConnectorMap((prev) => ({
-                            ...prev,
-                            [objectName]: e.target.value,
-                          }))
-                        }
-                      >
-                        <option value="">Select connector</option>
-                        {CONNECTOR_OPTIONS.map((connector) => (
-                          <option key={connector} value={connector}>
-                            {connector}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
+              {/* Add Situation - Only show if spine is selected */}
+              {liveJobSpine && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Add Situation</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    value={liveJobSituation}
+                    onChange={(e) => setLiveJobSituation(e.target.value)}
+                  >
+                    <option value="">Select situation</option>
+                    {(liveJobSpine === "invoice-2way" ? INVOICE_SITUATIONS : CUSTOMER_SUPPORT_SITUATIONS).map(
+                      (situation) => (
+                        <option key={situation} value={situation}>
+                          {situation}
+                        </option>
+                      ),
+                    )}
+                  </select>
                 </div>
-              </div>
+              )}
+
+              {/* Object-Connector-Map - Only show if spine is selected */}
+              {liveJobSpine && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
+                  <div className="space-y-3">
+                    {(liveJobSpine === "invoice-2way" ? INVOICE_OBJECT_OPTIONS : CUSTOMER_SUPPORT_OBJECT_OPTIONS).map(
+                      (objectName) => (
+                        <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
+                          <div className="text-sm text-gray-700">{objectName}</div>
+                          <select
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            value={liveJobObjectConnectorMap[objectName] || ""}
+                            onChange={(e) =>
+                              setLiveJobObjectConnectorMap((prev) => ({
+                                ...prev,
+                                [objectName]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Select connector</option>
+                            {CONNECTOR_OPTIONS.map((connector) => (
+                              <option key={connector} value={connector}>
+                                {connector}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
@@ -1573,6 +1965,7 @@ export default function ProcessSpine() {
               <button
                 className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
                 onClick={handleCreateLiveJob}
+                disabled={!liveJobName.trim() || !liveJobSpine}
               >
                 Create Live Job
               </button>

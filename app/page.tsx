@@ -3,25 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
-import {
-  FileText,
-  Cog,
-  Brain,
-  Eye,
-  CheckCircle,
-  Plus,
-  Lightbulb,
-  Wrench,
-  ArrowLeft,
-  Play,
-  Save,
-  ChevronDown,
-  ChevronRight,
-  X,
-  Settings,
-  Trash2,
-  RotateCcw,
-} from "lucide-react"
+import { FileText, Cog, Brain, Eye, CheckCircle, Plus, Lightbulb, Wrench, Trash2, RotateCcw } from "lucide-react"
+import { ProcessListView } from "@/components/process-list/process-list-view"
 
 // Process configurations
 const PROCESS_CONFIGS = {
@@ -297,6 +280,123 @@ export default function ProcessSpine() {
   const [activeLeftTab, setActiveLeftTab] = useState<"process-blueprint" | "process-spine" | "jobs">(
     "process-blueprint",
   )
+
+  // Process Blueprint states
+  const [showCreateBlueprintModal, setShowCreateBlueprintModal] = useState(false)
+  const [blueprintName, setBlueprintName] = useState("")
+  const [blueprintObjectInputs, setBlueprintObjectInputs] = useState([{ type: "", customName: "" }])
+  const [blueprintsList, setBlueprintsList] = useState([
+    {
+      id: "bp-1",
+      name: "Invoice 2-way matching",
+      objectInputs: ["Invoice", "Purchase Order"],
+      createdDate: "2024-01-15",
+      status: "Active",
+    },
+    {
+      id: "bp-2",
+      name: "Invoice 3-way matching",
+      objectInputs: ["Invoice", "Purchase Order", "Receipt"],
+      createdDate: "2024-01-14",
+      status: "Active",
+    },
+    {
+      id: "bp-3",
+      name: "Customer Support",
+      objectInputs: ["Customer Query", "Customer History"],
+      createdDate: "2024-01-13",
+      status: "Active",
+    },
+    {
+      id: "bp-4",
+      name: "Payment Processing",
+      objectInputs: ["Payment Request", "Account Info"],
+      createdDate: "2024-01-12",
+      status: "Active",
+    },
+  ])
+
+  const OBJECT_TYPE_OPTIONS = [
+    "Invoice",
+    "Purchase Order",
+    "Customer Query",
+    "Payment Request",
+    "Contract",
+    "Receipt",
+    "Customer History",
+    "Account Info",
+    "Vendor Info",
+    "Product Catalog",
+  ]
+
+  // Blueprint handlers
+  const handleViewBlueprint = (blueprintId: string) => {
+    console.log("Viewing blueprint:", blueprintId)
+    // TODO: Implement view functionality
+  }
+
+  const handleCopyBlueprint = (blueprintId: string) => {
+    const blueprint = blueprintsList.find((bp) => bp.id === blueprintId)
+    if (blueprint) {
+      const newBlueprint = {
+        ...blueprint,
+        id: `bp-${Date.now()}`,
+        name: `${blueprint.name} (Copy)`,
+        createdDate: new Date().toISOString().split("T")[0],
+      }
+      setBlueprintsList((prev) => [newBlueprint, ...prev])
+    }
+  }
+
+  const handleDeleteBlueprint = (blueprintId: string) => {
+    if (window.confirm("Are you sure you want to delete this blueprint?")) {
+      setBlueprintsList((prev) => prev.filter((bp) => bp.id !== blueprintId))
+    }
+  }
+
+  const handleAddObjectInput = () => {
+    setBlueprintObjectInputs((prev) => [...prev, { type: "", customName: "" }])
+  }
+
+  const handleRemoveObjectInput = (index: number) => {
+    if (blueprintObjectInputs.length > 1) {
+      setBlueprintObjectInputs((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleObjectInputChange = (index: number, field: "type" | "customName", value: string) => {
+    setBlueprintObjectInputs((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)))
+  }
+
+  const handleCreateBlueprint = () => {
+    if (!blueprintName.trim()) {
+      alert("Please enter a blueprint name")
+      return
+    }
+
+    const validInputs = blueprintObjectInputs.filter((input) => input.type.trim())
+    if (validInputs.length === 0) {
+      alert("Please add at least one object input")
+      return
+    }
+
+    const objectInputNames = validInputs.map((input) => input.customName.trim() || input.type)
+
+    const newBlueprint = {
+      id: `bp-${Date.now()}`,
+      name: blueprintName.trim(),
+      objectInputs: objectInputNames,
+      createdDate: new Date().toISOString().split("T")[0],
+      status: "Active",
+    }
+
+    setBlueprintsList((prev) => [newBlueprint, ...prev])
+
+    // Reset form
+    setBlueprintName("")
+    setBlueprintObjectInputs([{ type: "", customName: "" }])
+    setShowCreateBlueprintModal(false)
+  }
 
   // Process Spine states
   const [spineView, setSpineView] = useState<"list" | "flow">("list")
@@ -731,13 +831,13 @@ export default function ProcessSpine() {
   }
 
   // Object input/output management
-  const handleAddObjectInput = (nodeId: string, objectName: string) => {
+  const handleAddNodeObjectInput = (nodeId: string, objectName: string) => {
     setNodes((prev) =>
       prev.map((node) => (node.id === nodeId ? { ...node, objectInputs: [...node.objectInputs, objectName] } : node)),
     )
   }
 
-  const handleRemoveObjectInput = (nodeId: string, objectIndex: number) => {
+  const handleRemoveNodeObjectInput = (nodeId: string, objectIndex: number) => {
     setNodes((prev) =>
       prev.map((node) =>
         node.id === nodeId
@@ -1013,451 +1113,112 @@ export default function ProcessSpine() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
         {activeLeftTab === "process-blueprint" && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Process Blueprint</h3>
-              <p className="text-gray-600">Process Blueprint content will be implemented here</p>
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800">Process Blueprints</h2>
+                <p className="text-gray-600 text-sm">Create and manage process blueprints.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
+                  onClick={() => setShowCreateBlueprintModal(true)}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Process Blueprint
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-4">
+              <div className="bg-white rounded-lg shadow">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Blueprint Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Object Inputs
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {blueprintsList.map((blueprint) => (
+                        <tr key={blueprint.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {blueprint.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex flex-wrap gap-1">
+                              {blueprint.objectInputs.map((obj, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full"
+                                >
+                                  {obj}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{blueprint.createdDate}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              {blueprint.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              className="text-orange-600 hover:text-orange-900"
+                              onClick={() => handleViewBlueprint(blueprint.id)}
+                            >
+                              View
+                            </button>
+                            <button
+                              className="text-gray-600 hover:text-gray-900 p-1"
+                              onClick={() => handleCopyBlueprint(blueprint.id)}
+                              title="Copy blueprint"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-900 p-1"
+                              onClick={() => handleDeleteBlueprint(blueprint.id)}
+                              title="Delete blueprint"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {activeLeftTab === "process-spine" && (
-          <div className="h-full flex flex-col">
-            {spineView === "list" ? (
-              // Spine List View
-              <div className="h-full flex flex-col">
-                <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Process Spines</h2>
-                    <p className="text-gray-600 text-sm">Create, view, and edit process spines.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      New Process Spine
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {spines.map((spine) => (
-                    <div key={spine.id} className="bg-white rounded-lg shadow p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-800 truncate">{spine.name}</h3>
-                          <div className="mt-3 text-sm text-gray-700">
-                            <span className="mr-4">Stages: {spine.stages}</span>
-                            <span>Abilities: {spine.abilities}</span>
-                          </div>
-                          <div className="mt-2 text-xs text-gray-500">Last modified: {spine.lastModified}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm"
-                            onClick={() => handleViewSpine(spine.id)}
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              // Flow Builder View
-              <div className="h-full flex flex-col">
-                {/* Header with navigation */}
-                <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <button
-                      className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
-                      onClick={handleBackToSpinesList}
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span className="text-sm">Process Spines</span>
-                    </button>
-                    <div className="text-gray-400">/</div>
-                    <h2 className="text-xl font-semibold text-gray-800">{viewingSpineName || "New Process Spine"}</h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
-                      onClick={handleTestRun}
-                      disabled={isTestRunning}
-                    >
-                      <Play className="w-4 h-4" />
-                      {isTestRunning ? "Running..." : "Test Run"}
-                    </button>
-                    <button
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
-                      onClick={handleSave}
-                      disabled={isSaving}
-                    >
-                      <Save className="w-4 h-4" />
-                      {isSaving ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Main flow builder area */}
-                <div className="flex-1 flex">
-                  {/* Canvas area */}
-                  <div className="flex-1 relative overflow-hidden">
-                    <svg
-                      className="w-full h-full cursor-move"
-                      onMouseDown={handleCanvasMouseDown}
-                      onMouseMove={handleCanvasMouseMove}
-                      onMouseUp={handleCanvasMouseUp}
-                      onDrop={handleCanvasDrop}
-                      onDragOver={handleCanvasDragOver}
-                    >
-                      <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                          <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
-                        </marker>
-                      </defs>
-
-                      <g transform={`translate(${panOffset.x}, ${panOffset.y}) scale(${zoom})`}>
-                        {/* Render connections */}
-                        {connections.map(renderConnection)}
-
-                        {/* Connection preview */}
-                        {connectingFrom && connectionPreview && (
-                          <line
-                            x1={nodes.find((n) => n.id === connectingFrom)?.position.x + 80}
-                            y1={nodes.find((n) => n.id === connectingFrom)?.position.y + 40}
-                            x2={connectionPreview.x}
-                            y2={connectionPreview.y}
-                            stroke="#6b7280"
-                            strokeWidth="2"
-                            strokeDasharray="5,5"
-                          />
-                        )}
-
-                        {/* Render nodes */}
-                        {nodes.map((node) => {
-                          const stageConfig = getStageConfig(node.type)
-                          if (!stageConfig) return null
-
-                          const IconComponent = stageConfig.icon
-                          const isSelected = selectedStage === node.id
-                          const isTestingStage = currentTestStage === node.id
-
-                          return (
-                            <g key={node.id}>
-                              <foreignObject
-                                x={node.position.x}
-                                y={node.position.y}
-                                width="160"
-                                height="80"
-                                className="overflow-visible"
-                              >
-                                <div
-                                  className={`w-40 h-20 rounded-lg border-2 cursor-pointer transition-all ${
-                                    isSelected
-                                      ? "border-orange-500 shadow-lg"
-                                      : isTestingStage
-                                        ? "border-blue-500 shadow-lg animate-pulse"
-                                        : "border-gray-300 hover:border-gray-400"
-                                  } ${stageConfig.color} text-white flex flex-col items-center justify-center relative`}
-                                  onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
-                                  onClick={() => handleNodeClick(node.id)}
-                                  onMouseEnter={() => setHoveredNode(node.id)}
-                                  onMouseLeave={() => setHoveredNode(null)}
-                                >
-                                  <IconComponent className="w-5 h-5 mb-1" />
-                                  <span className="text-xs font-medium">{stageConfig.name}</span>
-
-                                  {/* Connection points */}
-                                  {stageConfig.connectionType !== "target" && (
-                                    <div
-                                      className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-400 rounded-full cursor-crosshair hover:bg-gray-600"
-                                      onMouseDown={(e) => handleConnectionStart(e, node.id)}
-                                    />
-                                  )}
-                                  {stageConfig.connectionType !== "source" && (
-                                    <div
-                                      className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-400 rounded-full cursor-crosshair hover:bg-gray-600"
-                                      onMouseUp={() => handleConnectionEnd(node.id)}
-                                    />
-                                  )}
-
-                                  {/* Ability count badge */}
-                                  {node.abilities.length > 0 && (
-                                    <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                      {node.abilities.length}
-                                    </div>
-                                  )}
-                                </div>
-                              </foreignObject>
-                            </g>
-                          )
-                        })}
-                      </g>
-                    </svg>
-
-                    {/* Stage configuration panel */}
-                    {selectedStage && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-h-80 overflow-y-auto">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold text-gray-800">
-                            {getStageConfig(nodes.find((n) => n.id === selectedStage)?.type)?.name} Configuration
-                          </h3>
-                          <button className="text-gray-400 hover:text-gray-600" onClick={() => setSelectedStage(null)}>
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-
-                        {(() => {
-                          const node = nodes.find((n) => n.id === selectedStage)
-                          if (!node) return null
-
-                          const isIntakeOrComplete = node.type === "intake" || node.type === "complete"
-
-                          return (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              {/* Object Inputs/Outputs for Intake and Complete */}
-                              {isIntakeOrComplete && (
-                                <>
-                                  {node.type === "intake" && (
-                                    <div>
-                                      <h4 className="font-medium text-gray-800 mb-2">Object Inputs</h4>
-                                      <div className="space-y-2">
-                                        {node.objectInputs.map((input, index) => (
-                                          <div
-                                            key={index}
-                                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded"
-                                          >
-                                            <span className="text-sm text-gray-700">{input}</span>
-                                            <button
-                                              className="text-red-600 hover:text-red-800"
-                                              onClick={() => handleRemoveObjectInput(selectedStage, index)}
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                        <select
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                                          onChange={(e) => {
-                                            if (e.target.value) {
-                                              handleAddObjectInput(selectedStage, e.target.value)
-                                              e.target.value = ""
-                                            }
-                                          }}
-                                        >
-                                          <option value="">Add object input...</option>
-                                          {OBJECT_INPUTS.intake?.map((input) => (
-                                            <option key={input} value={input}>
-                                              {input}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {node.type === "complete" && (
-                                    <div>
-                                      <h4 className="font-medium text-gray-800 mb-2">Object Outputs</h4>
-                                      <div className="space-y-2">
-                                        {node.objectOutputs.map((output, index) => (
-                                          <div
-                                            key={index}
-                                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded"
-                                          >
-                                            <span className="text-sm text-gray-700">{output}</span>
-                                            <button
-                                              className="text-red-600 hover:text-red-800"
-                                              onClick={() => handleRemoveObjectOutput(selectedStage, index)}
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                        <select
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                                          onChange={(e) => {
-                                            if (e.target.value) {
-                                              handleAddObjectOutput(selectedStage, e.target.value)
-                                              e.target.value = ""
-                                            }
-                                          }}
-                                        >
-                                          <option value="">Add object output...</option>
-                                          {OBJECT_OUTPUTS.complete?.map((output) => (
-                                            <option key={output} value={output}>
-                                              {output}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-
-                              {/* Abilities List for all stages */}
-                              <div className={isIntakeOrComplete ? "" : "lg:col-span-2"}>
-                                <h4 className="font-medium text-gray-800 mb-2">Abilities List</h4>
-                                <div className="space-y-2">
-                                  {node.abilities.map((ability, index) => (
-                                    <div
-                                      key={index}
-                                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded group"
-                                    >
-                                      <span className="text-sm text-gray-700">{ability}</span>
-                                      <div className="flex items-center gap-2">
-                                        <button className="text-orange-600 hover:text-orange-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Settings className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          className="text-red-600 hover:text-red-800"
-                                          onClick={() => handleRemoveAbility(selectedStage, index)}
-                                        >
-                                          <X className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
-
-                                  {/* Add ability dropdown */}
-                                  <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                                    onChange={(e) => {
-                                      if (e.target.value) {
-                                        handleAddAbility(selectedStage, e.target.value)
-                                        e.target.value = ""
-                                      }
-                                    }}
-                                  >
-                                    <option value="">Add ability...</option>
-                                    {getStageConfig(node.type)?.abilities.map((ability) => (
-                                      <option key={ability} value={ability}>
-                                        {ability}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right sidebar - Stage palette */}
-                  {showASFPanel && (
-                    <div className="w-64 bg-white border-l border-gray-200 p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-800">ASF Stages</h3>
-                        <button className="text-gray-400 hover:text-gray-600" onClick={() => setShowASFPanel(false)}>
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        {PROCESS_CONFIGS[selectedProcess]?.availableStages.map((stageType) => {
-                          const stageConfig = getStageConfig(stageType)
-                          if (!stageConfig) return null
-
-                          const IconComponent = stageConfig.icon
-
-                          return (
-                            <div
-                              key={stageType}
-                              className={`${stageConfig.color} text-white p-3 rounded-lg cursor-grab active:cursor-grabbing flex items-center gap-3 hover:opacity-90 transition-opacity`}
-                              draggable
-                              onDragStart={(e) => handleStageDragStart(e, stageType)}
-                            >
-                              <IconComponent className="w-5 h-5" />
-                              <span className="text-sm font-medium">{stageConfig.name}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      <div className="mt-6 text-xs text-gray-500">
-                        Drag stages to the canvas to add them to your process spine.
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Test results panel */}
-                {showTestResults && (
-                  <div className="bg-white border-t border-gray-200 p-4 max-h-80 overflow-y-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">Test Results</h3>
-                      <button className="text-gray-400 hover:text-gray-600" onClick={() => setShowTestResults(false)}>
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {isTestRunning && (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600">Running test...</p>
-                      </div>
-                    )}
-
-                    {testCompleted && (
-                      <div className="space-y-4">
-                        <div
-                          className={`p-3 rounded-lg ${
-                            testRunSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {testRunSuccessful ? "✓ Test completed successfully" : "✗ Test failed"}
-                        </div>
-
-                        {testResults.map((result, index) => (
-                          <div key={index} className="border rounded-lg p-4">
-                            <div
-                              className="flex items-center justify-between cursor-pointer"
-                              onClick={() =>
-                                setExpandedResults((prev) => ({
-                                  ...prev,
-                                  [result.nodeId]: !prev[result.nodeId],
-                                }))
-                              }
-                            >
-                              <h4 className="font-medium text-gray-800 capitalize">{result.stage}</h4>
-                              {expandedResults[result.nodeId] ? (
-                                <ChevronDown className="w-4 h-4 text-gray-600" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-600" />
-                              )}
-                            </div>
-
-                            {expandedResults[result.nodeId] && (
-                              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <h5 className="text-sm font-medium text-gray-600 mb-2">Input</h5>
-                                  <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
-                                    {JSON.stringify(result.input, null, 2)}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <h5 className="text-sm font-medium text-gray-600 mb-2">Output</h5>
-                                  <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
-                                    {JSON.stringify(result.output, null, 2)}
-                                  </pre>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {activeLeftTab === "process-spine" && <ProcessListView />}
 
         {activeLeftTab === "jobs" && (
           <div className="h-full flex flex-col">
@@ -2013,6 +1774,98 @@ export default function ProcessSpine() {
                 onClick={() => setShowViewLogsModal(false)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Blueprint Modal */}
+      {showCreateBlueprintModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">New Process Blueprint</h3>
+              <button className="text-gray-400 hover:text-gray-600" onClick={() => setShowCreateBlueprintModal(false)}>
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Blueprint Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Blueprint Name</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={blueprintName}
+                  onChange={(e) => setBlueprintName(e.target.value)}
+                  placeholder="Enter blueprint name"
+                />
+              </div>
+
+              {/* Add Object Inputs */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Add Object Inputs</label>
+                <div className="space-y-3">
+                  {blueprintObjectInputs.map((input, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <select
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={input.type}
+                        onChange={(e) => handleObjectInputChange(index, "type", e.target.value)}
+                      >
+                        <option value="">Select object type</option>
+                        {OBJECT_TYPE_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={input.customName}
+                        onChange={(e) => handleObjectInputChange(index, "customName", e.target.value)}
+                        placeholder="Custom name (optional)"
+                      />
+                      {index === blueprintObjectInputs.length - 1 ? (
+                        <button
+                          type="button"
+                          className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md"
+                          onClick={handleAddObjectInput}
+                          title="Add object input"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md"
+                          onClick={() => handleRemoveObjectInput(index)}
+                          title="Remove object input"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                onClick={() => setShowCreateBlueprintModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                onClick={handleCreateBlueprint}
+              >
+                Create Blueprint
               </button>
             </div>
           </div>

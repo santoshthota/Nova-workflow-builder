@@ -1,10 +1,7 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import { FileText, Cog, Brain, Eye, CheckCircle, Plus, Lightbulb, Wrench, Trash2, RotateCcw } from "lucide-react"
-import { ProcessListView } from "@/components/process-list/process-list-view"
+import { FileText, Brain, Eye, CheckCircle, Plus, Lightbulb, Wrench, Trash2, RotateCcw } from "lucide-react"
 
 // Process configurations
 const PROCESS_CONFIGS = {
@@ -38,7 +35,7 @@ const PROCESS_CONFIGS = {
       prepare: {
         id: "prepare",
         name: "Prepare",
-        icon: Cog,
+        icon: Eye,
         color: "bg-orange-600",
         connectionType: "default",
         abilities: ["find_matching_po", "find_matching_grn", "load_tolerance_rules"],
@@ -277,9 +274,7 @@ const SAMPLE_DATA = {
 
 export default function ProcessSpine() {
   // Global left sidebar tab
-  const [activeLeftTab, setActiveLeftTab] = useState<"process-blueprint" | "process-spine" | "jobs">(
-    "process-blueprint",
-  )
+  const [activeLeftTab, setActiveLeftTab] = useState<"process-blueprint" | "jobs">("process-blueprint")
 
   // Process Blueprint states
   const [showCreateBlueprintModal, setShowCreateBlueprintModal] = useState(false)
@@ -397,54 +392,6 @@ export default function ProcessSpine() {
     setBlueprintObjectInputs([{ type: "", customName: "" }])
     setShowCreateBlueprintModal(false)
   }
-
-  // Process Spine states
-  const [spineView, setSpineView] = useState<"list" | "flow">("list")
-  const [viewingSpineId, setViewingSpineId] = useState<string | null>(null)
-  const [viewingSpineName, setViewingSpineName] = useState<string>("")
-  const [selectedProcess, setSelectedProcess] = useState<string>("invoice-processing")
-  const [nodes, setNodes] = useState<any[]>([
-    {
-      id: "intake-1",
-      type: "intake",
-      position: { x: 300, y: 200 },
-      abilities: ["receive_invoice"],
-      objectInputs: [],
-      objectOutputs: [],
-      isDefault: true,
-    },
-    {
-      id: "complete-1",
-      type: "complete",
-      position: { x: 800, y: 200 },
-      abilities: [],
-      objectInputs: [],
-      objectOutputs: [],
-      isDefault: true,
-    },
-  ])
-  const [connections, setConnections] = useState<any[]>([])
-  const [selectedStage, setSelectedStage] = useState<string | null>(null)
-  const [showASFPanel, setShowASFPanel] = useState(true)
-  const [showTestResults, setShowTestResults] = useState(false)
-  const [isTestRunning, setIsTestRunning] = useState(false)
-  const [testResults, setTestResults] = useState<any[]>([])
-  const [currentTestStage, setCurrentTestStage] = useState<string | null>(null)
-  const [testCompleted, setTestCompleted] = useState(false)
-  const [testRunSuccessful, setTestRunSuccessful] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [expandedResults, setExpandedResults] = useState<Record<string, boolean>>({})
-  const [draggedStage, setDraggedStage] = useState<string | null>(null)
-  const [draggingNode, setDraggingNode] = useState<string | null>(null)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
-  const [connectingFrom, setConnectingFrom] = useState<string | null>(null)
-  const [connectionPreview, setConnectionPreview] = useState<{ x: number; y: number } | null>(null)
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null)
-  const [zoom, setZoom] = useState(1)
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
-  const [isPanning, setIsPanning] = useState(false)
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
 
   // Jobs tab states
   const [activeJobsTab, setActiveJobsTab] = useState<"test" | "live">("test")
@@ -669,256 +616,6 @@ export default function ProcessSpine() {
     "SFTP Invoice Upload",
   ]
 
-  // Spines list data
-  const [spines] = useState<
-    Array<{ id: string; name: string; stages: number; abilities: number; lastModified: string }>
-  >([
-    { id: "sp-1", name: "Invoice processing 2-way spine", stages: 6, abilities: 15, lastModified: "2025-07-01" },
-    { id: "sp-2", name: "Customer support baseline spine", stages: 3, abilities: 8, lastModified: "2025-07-02" },
-  ])
-
-  // Handle viewing a spine
-  const handleViewSpine = (spineId: string) => {
-    const spineData = PRE_POPULATED_SPINES[spineId]
-    if (spineData) {
-      setViewingSpineId(spineId)
-      setViewingSpineName(spineData.name)
-      setSelectedProcess(spineData.selectedProcess)
-      setNodes(spineData.nodes)
-      setConnections(spineData.connections)
-      setSpineView("flow")
-    }
-  }
-
-  // Handle back to spines list
-  const handleBackToSpinesList = () => {
-    setSpineView("list")
-    setViewingSpineId(null)
-    setViewingSpineName("")
-    setSelectedStage(null)
-    setTestResults([])
-    setTestCompleted(false)
-    setTestRunSuccessful(false)
-  }
-
-  // Canvas event handlers
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setIsPanning(true)
-      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y })
-    }
-  }
-
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
-      setPanOffset({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y,
-      })
-    }
-
-    if (draggingNode) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const x = (e.clientX - rect.left - panOffset.x) / zoom - dragOffset.x
-      const y = (e.clientY - rect.top - panOffset.y) / zoom - dragOffset.y
-
-      setNodes((prev) => prev.map((node) => (node.id === draggingNode ? { ...node, position: { x, y } } : node)))
-    }
-
-    if (connectingFrom && connectionPreview) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      setConnectionPreview({
-        x: (e.clientX - rect.left - panOffset.x) / zoom,
-        y: (e.clientY - rect.top - panOffset.y) / zoom,
-      })
-    }
-  }
-
-  const handleCanvasMouseUp = () => {
-    setIsPanning(false)
-    setDraggingNode(null)
-    setConnectingFrom(null)
-    setConnectionPreview(null)
-  }
-
-  // Node event handlers
-  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
-    e.stopPropagation()
-    const rect = e.currentTarget.getBoundingClientRect()
-    const node = nodes.find((n) => n.id === nodeId)
-    if (node) {
-      setDragOffset({
-        x: (e.clientX - rect.left) / zoom - node.position.x,
-        y: (e.clientY - rect.top) / zoom - node.position.y,
-      })
-      setDraggingNode(nodeId)
-    }
-  }
-
-  const handleNodeClick = (nodeId: string) => {
-    setSelectedStage(nodeId)
-  }
-
-  // Stage palette handlers
-  const handleStageDragStart = (e: React.DragEvent, stageType: string) => {
-    setDraggedStage(stageType)
-    e.dataTransfer.effectAllowed = "copy"
-  }
-
-  const handleCanvasDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    if (draggedStage) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const x = (e.clientX - rect.left - panOffset.x) / zoom
-      const y = (e.clientY - rect.top - panOffset.y) / zoom
-
-      const newNode = {
-        id: `${draggedStage}-${Date.now()}`,
-        type: draggedStage,
-        position: { x, y },
-        abilities: [],
-        objectInputs: [],
-        objectOutputs: [],
-        isDefault: false,
-      }
-
-      setNodes((prev) => [...prev, newNode])
-      setDraggedStage(null)
-    }
-  }
-
-  const handleCanvasDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
-
-  // Connection handlers
-  const handleConnectionStart = (e: React.MouseEvent, nodeId: string) => {
-    e.stopPropagation()
-    setConnectingFrom(nodeId)
-    const rect = e.currentTarget.getBoundingClientRect()
-    setConnectionPreview({
-      x: (e.clientX - rect.left - panOffset.x) / zoom,
-      y: (e.clientY - rect.top - panOffset.y) / zoom,
-    })
-  }
-
-  const handleConnectionEnd = (nodeId: string) => {
-    if (connectingFrom && connectingFrom !== nodeId) {
-      const newConnection = {
-        id: `${connectingFrom}-${nodeId}`,
-        from: connectingFrom,
-        to: nodeId,
-      }
-      setConnections((prev) => [...prev, newConnection])
-    }
-    setConnectingFrom(null)
-    setConnectionPreview(null)
-  }
-
-  // Ability management
-  const handleAddAbility = (nodeId: string, abilityName: string) => {
-    setNodes((prev) =>
-      prev.map((node) => (node.id === nodeId ? { ...node, abilities: [...node.abilities, abilityName] } : node)),
-    )
-  }
-
-  const handleRemoveAbility = (nodeId: string, abilityIndex: number) => {
-    setNodes((prev) =>
-      prev.map((node) =>
-        node.id === nodeId ? { ...node, abilities: node.abilities.filter((_, index) => index !== abilityIndex) } : node,
-      ),
-    )
-  }
-
-  // Object input/output management
-  const handleAddNodeObjectInput = (nodeId: string, objectName: string) => {
-    setNodes((prev) =>
-      prev.map((node) => (node.id === nodeId ? { ...node, objectInputs: [...node.objectInputs, objectName] } : node)),
-    )
-  }
-
-  const handleRemoveNodeObjectInput = (nodeId: string, objectIndex: number) => {
-    setNodes((prev) =>
-      prev.map((node) =>
-        node.id === nodeId
-          ? { ...node, objectInputs: node.objectInputs.filter((_, index) => index !== objectIndex) }
-          : node,
-      ),
-    )
-  }
-
-  const handleAddObjectOutput = (nodeId: string, objectName: string) => {
-    setNodes((prev) =>
-      prev.map((node) => (node.id === nodeId ? { ...node, objectOutputs: [...node.objectOutputs, objectName] } : node)),
-    )
-  }
-
-  const handleRemoveObjectOutput = (nodeId: string, objectIndex: number) => {
-    setNodes((prev) =>
-      prev.map((node) =>
-        node.id === nodeId
-          ? { ...node, objectOutputs: node.objectOutputs.filter((_, index) => index !== objectIndex) }
-          : node,
-      ),
-    )
-  }
-
-  // Test run functionality
-  const handleTestRun = async () => {
-    setIsTestRunning(true)
-    setShowTestResults(true)
-    setTestResults([])
-    setTestCompleted(false)
-    setTestRunSuccessful(false)
-
-    const sortedNodes = [...nodes].sort((a, b) => a.position.x - b.position.x)
-
-    for (let i = 0; i < sortedNodes.length; i++) {
-      const node = sortedNodes[i]
-      setCurrentTestStage(node.id)
-
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      const stageData = SAMPLE_DATA[selectedProcess]?.[node.type]
-      if (stageData) {
-        setTestResults((prev) => [
-          ...prev,
-          {
-            stage: node.type,
-            nodeId: node.id,
-            input: stageData.input,
-            output: stageData.output,
-            status: "success",
-          },
-        ])
-      }
-    }
-
-    setCurrentTestStage(null)
-    setIsTestRunning(false)
-    setTestCompleted(true)
-    setTestRunSuccessful(true)
-  }
-
-  // Save functionality
-  const handleSave = async () => {
-    setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setSaveSuccess(true)
-    setTimeout(() => setSaveSuccess(false), 2000)
-  }
-
-  // Delete connection
-  const handleDeleteConnection = (connectionId: string) => {
-    setConnections((prev) => prev.filter((conn) => conn.id !== connectionId))
-  }
-
-  // Get stage config
-  const getStageConfig = (stageType: string) => {
-    return PROCESS_CONFIGS[selectedProcess]?.stages[stageType]
-  }
-
   // Jobs handlers
   const handleViewLogs = (job: any) => {
     setSelectedJobLogs(job)
@@ -1028,41 +725,6 @@ export default function ProcessSpine() {
     }
   }
 
-  // Render connection line
-  const renderConnection = (connection: any) => {
-    const fromNode = nodes.find((n) => n.id === connection.from)
-    const toNode = nodes.find((n) => n.id === connection.to)
-
-    if (!fromNode || !toNode) return null
-
-    const fromX = fromNode.position.x + 80
-    const fromY = fromNode.position.y + 40
-    const toX = toNode.position.x
-    const toY = toNode.position.y + 40
-
-    return (
-      <g key={connection.id}>
-        <line x1={fromX} y1={fromY} x2={toX} y2={toY} stroke="#6b7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
-        <circle
-          cx={(fromX + toX) / 2}
-          cy={(fromY + toY) / 2}
-          r="8"
-          fill="#ef4444"
-          className="cursor-pointer hover:fill-red-600"
-          onClick={() => handleDeleteConnection(connection.id)}
-        />
-        <text
-          x={(fromX + toX) / 2}
-          y={(fromY + toY) / 2 + 1}
-          textAnchor="middle"
-          className="text-xs fill-white pointer-events-none"
-        >
-          ×
-        </text>
-      </g>
-    )
-  }
-
   return (
     <div className="h-screen w-full bg-gray-100 flex overflow-hidden">
       {/* Global Left Sidebar */}
@@ -1083,17 +745,6 @@ export default function ProcessSpine() {
               className={`w-4 h-4 ${activeLeftTab === "process-blueprint" ? "text-orange-700" : "text-gray-500"}`}
             />
             <span>Process Blueprint</span>
-          </button>
-          <button
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
-              activeLeftTab === "process-spine"
-                ? "bg-orange-100 text-orange-800 border border-orange-200"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => setActiveLeftTab("process-spine")}
-          >
-            <Cog className={`w-4 h-4 ${activeLeftTab === "process-spine" ? "text-orange-700" : "text-gray-500"}`} />
-            <span>Process Spine</span>
           </button>
           <button
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
@@ -1217,8 +868,6 @@ export default function ProcessSpine() {
             </div>
           </div>
         )}
-
-        {activeLeftTab === "process-spine" && <ProcessListView />}
 
         {activeLeftTab === "jobs" && (
           <div className="h-full flex flex-col">

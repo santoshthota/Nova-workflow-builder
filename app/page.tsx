@@ -416,6 +416,193 @@ export default function ProcessSpine() {
   const [liveJobSituation, setLiveJobSituation] = useState("")
   const [liveJobObjectConnectorMap, setLiveJobObjectConnectorMap] = useState<Record<string, string>>({})
 
+  // Action type and properties states
+  const [testJobActionTypes, setTestJobActionTypes] = useState<Record<string, string>>({})
+  const [testJobProperties, setTestJobProperties] = useState<Record<string, Record<string, string>>>({})
+  const [liveJobActionTypes, setLiveJobActionTypes] = useState<Record<string, string>>({})
+  const [liveJobProperties, setLiveJobProperties] = useState<Record<string, Record<string, string>>>({})
+
+  // Advanced settings expansion states
+  const [testJobExpandedAdvanced, setTestJobExpandedAdvanced] = useState<Record<string, boolean>>({})
+  const [liveJobExpandedAdvanced, setLiveJobExpandedAdvanced] = useState<Record<string, boolean>>({})
+
+  // Jobs handlers
+  const handleViewLogs = (job: any) => {
+    setSelectedJobLogs(job)
+    setShowViewLogsModal(true)
+  }
+
+  const handleDeleteTestJob = (jobId: string) => {
+    if (window.confirm("Are you sure you want to delete this test job?")) {
+      console.log("Deleting test job:", jobId)
+    }
+  }
+
+  const handleCreateTestJob = () => {
+    if (!testJobName.trim() || !testJobSpine) {
+      alert("Please enter a test job name and select a process spine")
+      return
+    }
+
+    console.log("Creating test job:", {
+      name: testJobName,
+      spine: testJobSpine,
+      type: testJobType,
+      dataSource: testJobDataSource,
+      customData: testJobCustomData,
+      file: testJobFile,
+      objectConnectorMap: testJobObjectConnectorMap,
+      actionTypes: testJobActionTypes,
+      properties: testJobProperties,
+    })
+
+    setTestJobName("")
+    setTestJobSpine("")
+    setTestJobType("File")
+    setTestJobDataSource("Use Sample Data")
+    setTestJobCustomData("")
+    setTestJobFile(null)
+    setTestJobObjectConnectorMap({})
+    setTestJobActionTypes({})
+    setTestJobProperties({})
+    setShowCreateTestJobModal(false)
+  }
+
+  const handleCreateLiveJob = () => {
+    if (!liveJobName.trim() || !liveJobSpine) {
+      alert("Please enter a live job name and select a process spine")
+      return
+    }
+
+    console.log("Creating live job:", {
+      name: liveJobName,
+      spine: liveJobSpine,
+      situation: liveJobSituation,
+      objectConnectorMap: liveJobObjectConnectorMap,
+      actionTypes: liveJobActionTypes,
+      properties: liveJobProperties,
+    })
+
+    setLiveJobName("")
+    setLiveJobSpine("")
+    setLiveJobSituation("")
+    setLiveJobObjectConnectorMap({})
+    setLiveJobActionTypes({})
+    setLiveJobProperties({})
+    setShowCreateLiveJobModal(false)
+  }
+
+  const handleToggleLiveJobActive = (jobId: string) => {
+    setLiveJobs((prev) => prev.map((job) => (job.id === jobId ? { ...job, active: !job.active } : job)))
+  }
+
+  const handleDeleteLiveJob = (jobId: string) => {
+    if (window.confirm("Are you sure you want to delete this live job?")) {
+      setLiveJobs((prev) => prev.filter((job) => job.id !== jobId))
+    }
+  }
+
+  const handleRetryLiveJob = async (jobId: string) => {
+    setRetryingJobs((prev) => new Set(prev).add(jobId))
+
+    try {
+      // Simulate retry process
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Update job status to running after successful retry
+      setLiveJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId
+            ? {
+                ...job,
+                status: "running" as const,
+                active: true,
+                logs: [
+                  ...job.logs,
+                  {
+                    stage: "Retry",
+                    input: { retryAttempt: 1, timestamp: new Date().toISOString() },
+                    output: { status: "retry_successful", message: "Job restarted successfully" },
+                  },
+                ],
+              }
+            : job,
+        ),
+      )
+
+      console.log("Job retried successfully:", jobId)
+    } catch (error) {
+      console.error("Failed to retry job:", error)
+      // Optionally show error message to user
+    } finally {
+      setRetryingJobs((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(jobId)
+        return newSet
+      })
+    }
+  }
+
+  // Handlers for action types and properties
+  const handleTestJobActionTypeChange = (objectName: string, actionType: string) => {
+    setTestJobActionTypes((prev) => ({
+      ...prev,
+      [objectName]: actionType,
+    }))
+    // Reset properties when action type changes
+    setTestJobProperties((prev) => ({
+      ...prev,
+      [objectName]: {},
+    }))
+  }
+
+  const handleTestJobPropertyChange = (objectName: string, propertyName: string, value: string) => {
+    setTestJobProperties((prev) => ({
+      ...prev,
+      [objectName]: {
+        ...prev[objectName],
+        [propertyName]: value,
+      },
+    }))
+  }
+
+  const handleLiveJobActionTypeChange = (objectName: string, actionType: string) => {
+    setLiveJobActionTypes((prev) => ({
+      ...prev,
+      [objectName]: actionType,
+    }))
+    // Reset properties when action type changes
+    setLiveJobProperties((prev) => ({
+      ...prev,
+      [objectName]: {},
+    }))
+  }
+
+  const handleLiveJobPropertyChange = (objectName: string, propertyName: string, value: string) => {
+    setLiveJobProperties((prev) => ({
+      ...prev,
+      [objectName]: {
+        ...prev[objectName],
+        [propertyName]: value,
+      },
+    }))
+  }
+
+  // Advanced settings toggle handlers
+  const handleToggleTestJobAdvanced = (objectName: string) => {
+    setTestJobExpandedAdvanced((prev) => ({
+      ...prev,
+      [objectName]: !prev[objectName],
+    }))
+  }
+
+  const handleToggleLiveJobAdvanced = (objectName: string) => {
+    setLiveJobExpandedAdvanced((prev) => ({
+      ...prev,
+      [objectName]: !prev[objectName],
+    }))
+  }
+
   // Sample data
   const [testJobs] = useState([
     {
@@ -609,121 +796,67 @@ export default function ProcessSpine() {
     "SFTP Server",
   ]
 
+  const ACTION_TYPES_BY_CONNECTOR = {
+    "AWS S3 PO": ["read file", "write file", "list files", "delete file"],
+    "Slack Message": ["send message", "read message", "update message", "delete message"],
+    "MS-365 Email": ["send email", "read email", "forward email", "archive email"],
+    "ERP System": ["create record", "read record", "update record", "delete record"],
+    "Database Connection": ["select query", "insert query", "update query", "delete query"],
+    "API Webhook": ["GET request", "POST request", "PUT request", "DELETE request"],
+    "SFTP Server": ["upload file", "download file", "list files", "delete file"],
+  }
+
+  const PROPERTIES_BY_ACTION = {
+    "AWS S3 PO": {
+      "read file": ["Bucket Name", "File Path", "Access Key ID", "Secret Access Key", "Region"],
+      "write file": ["Bucket Name", "File Path", "Content Type", "Access Key ID", "Secret Access Key", "Region"],
+      "list files": ["Bucket Name", "Prefix", "Access Key ID", "Secret Access Key", "Region"],
+      "delete file": ["Bucket Name", "File Path", "Access Key ID", "Secret Access Key", "Region"],
+    },
+    "Slack Message": {
+      "send message": ["Channel ID", "Bot Token", "Message Text", "Thread ID"],
+      "read message": ["Channel ID", "Bot Token", "Message ID", "Timestamp"],
+      "update message": ["Channel ID", "Bot Token", "Message ID", "New Text"],
+      "delete message": ["Channel ID", "Bot Token", "Message ID"],
+    },
+    "MS-365 Email": {
+      "send email": ["To Address", "Subject", "Body", "Client ID", "Client Secret", "Tenant ID"],
+      "read email": ["Mailbox", "Folder", "Client ID", "Client Secret", "Tenant ID"],
+      "forward email": ["Message ID", "To Address", "Client ID", "Client Secret", "Tenant ID"],
+      "archive email": ["Message ID", "Archive Folder", "Client ID", "Client Secret", "Tenant ID"],
+    },
+    "ERP System": {
+      "create record": ["Endpoint URL", "API Key", "Record Type", "Data Payload"],
+      "read record": ["Endpoint URL", "API Key", "Record ID", "Record Type"],
+      "update record": ["Endpoint URL", "API Key", "Record ID", "Data Payload"],
+      "delete record": ["Endpoint URL", "API Key", "Record ID", "Record Type"],
+    },
+    "Database Connection": {
+      "select query": ["Connection String", "Database Name", "Query", "Username", "Password"],
+      "insert query": ["Connection String", "Database Name", "Table Name", "Data Values", "Username", "Password"],
+      "update query": ["Connection String", "Database Name", "Query", "Where Clause", "Username", "Password"],
+      "delete query": ["Connection String", "Database Name", "Table Name", "Where Clause", "Username", "Password"],
+    },
+    "API Webhook": {
+      "GET request": ["URL", "Headers", "Query Parameters", "Authentication"],
+      "POST request": ["URL", "Headers", "Request Body", "Authentication"],
+      "PUT request": ["URL", "Headers", "Request Body", "Authentication"],
+      "DELETE request": ["URL", "Headers", "Query Parameters", "Authentication"],
+    },
+    "SFTP Server": {
+      "upload file": ["Host", "Port", "Username", "Password", "Remote Path", "Local File Path"],
+      "download file": ["Host", "Port", "Username", "Password", "Remote Path", "Local Path"],
+      "list files": ["Host", "Port", "Username", "Password", "Directory Path"],
+      "delete file": ["Host", "Port", "Username", "Password", "File Path"],
+    },
+  }
+
   const AVAILABLE_SITUATIONS = [
     "AWS S3 Invoice",
     "Email Invoice Processing",
     "API Invoice Intake",
     "SFTP Invoice Upload",
   ]
-
-  // Jobs handlers
-  const handleViewLogs = (job: any) => {
-    setSelectedJobLogs(job)
-    setShowViewLogsModal(true)
-  }
-
-  const handleDeleteTestJob = (jobId: string) => {
-    if (window.confirm("Are you sure you want to delete this test job?")) {
-      console.log("Deleting test job:", jobId)
-    }
-  }
-
-  const handleCreateTestJob = () => {
-    if (!testJobName.trim() || !testJobSpine) {
-      alert("Please enter a test job name and select a process spine")
-      return
-    }
-
-    console.log("Creating test job:", {
-      name: testJobName,
-      spine: testJobSpine,
-      type: testJobType,
-      dataSource: testJobDataSource,
-      customData: testJobCustomData,
-      file: testJobFile,
-      objectConnectorMap: testJobObjectConnectorMap,
-    })
-
-    setTestJobName("")
-    setTestJobSpine("")
-    setTestJobType("File")
-    setTestJobDataSource("Use Sample Data")
-    setTestJobCustomData("")
-    setTestJobFile(null)
-    setTestJobObjectConnectorMap({})
-    setShowCreateTestJobModal(false)
-  }
-
-  const handleCreateLiveJob = () => {
-    if (!liveJobName.trim() || !liveJobSpine) {
-      alert("Please enter a live job name and select a process spine")
-      return
-    }
-
-    console.log("Creating live job:", {
-      name: liveJobName,
-      spine: liveJobSpine,
-      situation: liveJobSituation,
-      objectConnectorMap: liveJobObjectConnectorMap,
-    })
-
-    setLiveJobName("")
-    setLiveJobSpine("")
-    setLiveJobSituation("")
-    setLiveJobObjectConnectorMap({})
-    setShowCreateLiveJobModal(false)
-  }
-
-  const handleToggleLiveJobActive = (jobId: string) => {
-    setLiveJobs((prev) => prev.map((job) => (job.id === jobId ? { ...job, active: !job.active } : job)))
-  }
-
-  const handleDeleteLiveJob = (jobId: string) => {
-    if (window.confirm("Are you sure you want to delete this live job?")) {
-      setLiveJobs((prev) => prev.filter((job) => job.id !== jobId))
-    }
-  }
-
-  const handleRetryLiveJob = async (jobId: string) => {
-    setRetryingJobs((prev) => new Set(prev).add(jobId))
-
-    try {
-      // Simulate retry process
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Update job status to running after successful retry
-      setLiveJobs((prev) =>
-        prev.map((job) =>
-          job.id === jobId
-            ? {
-                ...job,
-                status: "running" as const,
-                active: true,
-                logs: [
-                  ...job.logs,
-                  {
-                    stage: "Retry",
-                    input: { retryAttempt: 1, timestamp: new Date().toISOString() },
-                    output: { status: "retry_successful", message: "Job restarted successfully" },
-                  },
-                ],
-              }
-            : job,
-        ),
-      )
-
-      console.log("Job retried successfully:", jobId)
-    } catch (error) {
-      console.error("Failed to retry job:", error)
-      // Optionally show error message to user
-    } finally {
-      setRetryingJobs((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(jobId)
-        return newSet
-      })
-    }
-  }
 
   return (
     <div className="h-screen w-full bg-gray-100 flex overflow-hidden">
@@ -1219,34 +1352,147 @@ export default function ProcessSpine() {
                 </div>
               )}
 
-              {/* Object-Connector-Map - Only show if spine is selected */}
+              {/* Object-Connector-Action-Properties Map - Only show if spine is selected */}
               {testJobSpine && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Object-Connector-Action-Properties Configuration
+                  </h4>
+                  <div className="space-y-6">
                     {(testJobSpine === "invoice-2way" ? INVOICE_OBJECT_OPTIONS : CUSTOMER_SUPPORT_OBJECT_OPTIONS).map(
-                      (objectName) => (
-                        <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
-                          <div className="text-sm text-gray-700">{objectName}</div>
-                          <select
-                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            value={testJobObjectConnectorMap[objectName] || ""}
-                            onChange={(e) =>
-                              setTestJobObjectConnectorMap((prev) => ({
-                                ...prev,
-                                [objectName]: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="">Select connector</option>
-                            {CONNECTOR_OPTIONS.map((connector) => (
-                              <option key={connector} value={connector}>
-                                {connector}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ),
+                      (objectName) => {
+                        const selectedConnector = testJobObjectConnectorMap[objectName] || ""
+                        const selectedActionType = testJobActionTypes[objectName] || ""
+                        const availableActions = selectedConnector
+                          ? ACTION_TYPES_BY_CONNECTOR[selectedConnector] || []
+                          : []
+                        const availableProperties =
+                          selectedConnector && selectedActionType
+                            ? PROPERTIES_BY_ACTION[selectedConnector]?.[selectedActionType] || []
+                            : []
+
+                        return (
+                          <div key={objectName} className="border rounded-lg p-4 bg-gray-50">
+                            <h5 className="font-medium text-gray-800 mb-3">{objectName}</h5>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              {/* Connector Selection */}
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Connector</label>
+                                <select
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  value={selectedConnector}
+                                  onChange={(e) => {
+                                    setTestJobObjectConnectorMap((prev) => ({
+                                      ...prev,
+                                      [objectName]: e.target.value,
+                                    }))
+                                    // Reset action type and properties when connector changes
+                                    setTestJobActionTypes((prev) => ({
+                                      ...prev,
+                                      [objectName]: "",
+                                    }))
+                                    setTestJobProperties((prev) => ({
+                                      ...prev,
+                                      [objectName]: {},
+                                    }))
+                                  }}
+                                >
+                                  <option value="">Select connector</option>
+                                  {CONNECTOR_OPTIONS.map((connector) => (
+                                    <option key={connector} value={connector}>
+                                      {connector}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Action Type Selection */}
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Action Type</label>
+                                <select
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  value={selectedActionType}
+                                  onChange={(e) => handleTestJobActionTypeChange(objectName, e.target.value)}
+                                  disabled={!selectedConnector}
+                                >
+                                  <option value="">Select action type</option>
+                                  {availableActions.map((action) => (
+                                    <option key={action} value={action}>
+                                      {action}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Advanced Configuration */}
+                            {selectedConnector && selectedActionType && availableProperties.length > 0 && (
+                              <div>
+                                <button
+                                  type="button"
+                                  className="flex items-center justify-between w-full text-left"
+                                  onClick={() => handleToggleTestJobAdvanced(objectName)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-600">Advanced Configuration</span>
+                                    <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                      optional
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {!testJobExpandedAdvanced[objectName] && (
+                                      <span className="text-xs text-gray-500">
+                                        {Object.keys(testJobProperties[objectName] || {}).length} of{" "}
+                                        {availableProperties.length} configured
+                                      </span>
+                                    )}
+                                    <svg
+                                      className={`w-4 h-4 text-gray-500 transition-transform ${
+                                        testJobExpandedAdvanced[objectName] ? "rotate-180" : ""
+                                      }`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                      />
+                                    </svg>
+                                  </div>
+                                </button>
+
+                                {testJobExpandedAdvanced[objectName] && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <p className="text-xs text-gray-500 mb-3">
+                                      All configuration properties are optional
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      {availableProperties.map((property) => (
+                                        <div key={property}>
+                                          <label className="block text-xs text-gray-500 mb-1">{property}</label>
+                                          <input
+                                            type="text"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                            value={testJobProperties[objectName]?.[property] || ""}
+                                            onChange={(e) =>
+                                              handleTestJobPropertyChange(objectName, property, e.target.value)
+                                            }
+                                            placeholder={`Enter ${property.toLowerCase()}`}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      },
                     )}
                   </div>
                 </div>
@@ -1331,34 +1577,147 @@ export default function ProcessSpine() {
                 </div>
               )}
 
-              {/* Object-Connector-Map - Only show if spine is selected */}
+              {/* Object-Connector-Action-Properties Map - Only show if spine is selected */}
               {liveJobSpine && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Object-Connector-Map</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Object-Connector-Action-Properties Configuration
+                  </h4>
+                  <div className="space-y-6">
                     {(liveJobSpine === "invoice-2way" ? INVOICE_OBJECT_OPTIONS : CUSTOMER_SUPPORT_OBJECT_OPTIONS).map(
-                      (objectName) => (
-                        <div key={objectName} className="grid grid-cols-2 gap-4 items-center">
-                          <div className="text-sm text-gray-700">{objectName}</div>
-                          <select
-                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            value={liveJobObjectConnectorMap[objectName] || ""}
-                            onChange={(e) =>
-                              setLiveJobObjectConnectorMap((prev) => ({
-                                ...prev,
-                                [objectName]: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="">Select connector</option>
-                            {CONNECTOR_OPTIONS.map((connector) => (
-                              <option key={connector} value={connector}>
-                                {connector}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ),
+                      (objectName) => {
+                        const selectedConnector = liveJobObjectConnectorMap[objectName] || ""
+                        const selectedActionType = liveJobActionTypes[objectName] || ""
+                        const availableActions = selectedConnector
+                          ? ACTION_TYPES_BY_CONNECTOR[selectedConnector] || []
+                          : []
+                        const availableProperties =
+                          selectedConnector && selectedActionType
+                            ? PROPERTIES_BY_ACTION[selectedConnector]?.[selectedActionType] || []
+                            : []
+
+                        return (
+                          <div key={objectName} className="border rounded-lg p-4 bg-gray-50">
+                            <h5 className="font-medium text-gray-800 mb-3">{objectName}</h5>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              {/* Connector Selection */}
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Connector</label>
+                                <select
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  value={selectedConnector}
+                                  onChange={(e) => {
+                                    setLiveJobObjectConnectorMap((prev) => ({
+                                      ...prev,
+                                      [objectName]: e.target.value,
+                                    }))
+                                    // Reset action type and properties when connector changes
+                                    setLiveJobActionTypes((prev) => ({
+                                      ...prev,
+                                      [objectName]: "",
+                                    }))
+                                    setLiveJobProperties((prev) => ({
+                                      ...prev,
+                                      [objectName]: {},
+                                    }))
+                                  }}
+                                >
+                                  <option value="">Select connector</option>
+                                  {CONNECTOR_OPTIONS.map((connector) => (
+                                    <option key={connector} value={connector}>
+                                      {connector}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Action Type Selection */}
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Action Type</label>
+                                <select
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  value={selectedActionType}
+                                  onChange={(e) => handleLiveJobActionTypeChange(objectName, e.target.value)}
+                                  disabled={!selectedConnector}
+                                >
+                                  <option value="">Select action type</option>
+                                  {availableActions.map((action) => (
+                                    <option key={action} value={action}>
+                                      {action}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Advanced Configuration */}
+                            {selectedConnector && selectedActionType && availableProperties.length > 0 && (
+                              <div>
+                                <button
+                                  type="button"
+                                  className="flex items-center justify-between w-full text-left"
+                                  onClick={() => handleToggleLiveJobAdvanced(objectName)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-600">Advanced Configuration</span>
+                                    <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                      optional
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {!liveJobExpandedAdvanced[objectName] && (
+                                      <span className="text-xs text-gray-500">
+                                        {Object.keys(liveJobProperties[objectName] || {}).length} of{" "}
+                                        {availableProperties.length} configured
+                                      </span>
+                                    )}
+                                    <svg
+                                      className={`w-4 h-4 text-gray-500 transition-transform ${
+                                        liveJobExpandedAdvanced[objectName] ? "rotate-180" : ""
+                                      }`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                      />
+                                    </svg>
+                                  </div>
+                                </button>
+
+                                {liveJobExpandedAdvanced[objectName] && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <p className="text-xs text-gray-500 mb-3">
+                                      All configuration properties are optional
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      {availableProperties.map((property) => (
+                                        <div key={property}>
+                                          <label className="block text-xs text-gray-500 mb-1">{property}</label>
+                                          <input
+                                            type="text"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                            value={liveJobProperties[objectName]?.[property] || ""}
+                                            onChange={(e) =>
+                                              handleLiveJobPropertyChange(objectName, property, e.target.value)
+                                            }
+                                            placeholder={`Enter ${property.toLowerCase()}`}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      },
                     )}
                   </div>
                 </div>
